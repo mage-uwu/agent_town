@@ -20,7 +20,7 @@ This is a procedural generator, with no image service, AI model, or API key. It 
 
 The current visual vocabulary is intentionally compact: 4 facial-hair styles, 5 headwear styles (including none), 4 outfits, 5 clothing palettes, 5 skin tones, 6 hair colors, plus geometry/detail variations. This is the initial player asset system; world simulation and gameplay are not included.
 
-Use seeds for repeatable starting characters, select styles and palettes, reroll a single part, or lock parts when generating another player. Locks protect random generation; deliberate style/palette edits still apply. Clothing colors stay fixed during generation when hat or body is locked. Save a JSON recipe to preserve all edits: the original seed alone only reproduces the original generated character. Imports validate values before rendering and do not change lock settings.
+Use seeds for repeatable starting characters, select styles and palettes, reroll a single part, or lock parts when generating another player. Locks protect random generation; deliberate style/palette edits still apply. Clothing colors stay fixed during generation when hat or body is locked. Skin tone is shared by head and body and stays fixed when either is locked. Save a JSON recipe to preserve all edits: the original seed alone only reproduces the original generated character. Imports validate values before rendering and do not change lock settings.
 
 ## Asset contract
 
