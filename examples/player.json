@@ -1,0 +1,99 @@
+{
+  "generator": "agent-town/player",
+  "generatorVersion": 1,
+  "player": {
+    "schemaVersion": 1,
+    "type": "player",
+    "seed": "COPPER-005",
+    "name": "Orrin Stonebriar",
+    "palette": "moss",
+    "skin": "#f0ceb0",
+    "parts": {
+      "head": {
+        "seed": "COPPER-005",
+        "style": "braided",
+        "hair": "#5b3c2f",
+        "width": 6,
+        "brow": 0
+      },
+      "hat": {
+        "seed": "COPPER-005",
+        "style": "ranger",
+        "height": 10,
+        "feather": true
+      },
+      "body": {
+        "seed": "COPPER-005",
+        "style": "tunic",
+        "width": 7,
+        "buttons": true
+      }
+    }
+  },
+  "image": "player.png",
+  "size": {
+    "w": 192,
+    "h": 48
+  },
+  "frameSize": {
+    "w": 48,
+    "h": 48
+  },
+  "alpha": true,
+  "anchor": {
+    "x": 24,
+    "y": 43
+  },
+  "directionOrder": [
+    "front",
+    "back",
+    "left",
+    "right"
+  ],
+  "frames": {
+    "front": {
+      "x": 0,
+      "y": 0,
+      "w": 48,
+      "h": 48
+    },
+    "back": {
+      "x": 48,
+      "y": 0,
+      "w": 48,
+      "h": 48
+    },
+    "left": {
+      "x": 96,
+      "y": 0,
+      "w": 48,
+      "h": 48
+    },
+    "right": {
+      "x": 144,
+      "y": 0,
+      "w": 48,
+      "h": 48
+    }
+  },
+  "parts": {
+    "body": {
+      "image": "parts/body.png",
+      "visibleLayer": "layers/body.png",
+      "sameRegistration": true,
+      "compositing": "Overlay visible layers to reconstruct this player. Re-render combined voxel model after swapping parts for correct occlusion."
+    },
+    "head": {
+      "image": "parts/head.png",
+      "visibleLayer": "layers/head.png",
+      "sameRegistration": true,
+      "compositing": "Overlay visible layers to reconstruct this player. Re-render combined voxel model after swapping parts for correct occlusion."
+    },
+    "hat": {
+      "image": "parts/hat.png",
+      "visibleLayer": "layers/hat.png",
+      "sameRegistration": true,
+      "compositing": "Overlay visible layers to reconstruct this player. Re-render combined voxel model after swapping parts for correct occlusion."
+    }
+  }
+}

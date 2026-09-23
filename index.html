@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#171c1b"><title>Agent Town — Player Workshop</title><link rel="stylesheet" href="style.css"></head>
+<body>
+  <header class="topbar"><a class="brand" href="#"><span class="brand-mark">▟</span> AGENT TOWN <span class="version">PRE-ALPHA / 001</span></a><div class="top-status"><span class="status-dot"></span> PLAYER WORKSHOP <span class="divider">/</span> LOCAL GENERATOR</div><a class="repo-link" href="https://github.com/mage-uwu/agent_town" target="_blank" rel="noreferrer">Repository ↗</a></header>
+  <main>
+    <section class="intro"><div><p class="eyebrow">THE FIRST INHABITANT</p><h1>Small pixels.<br><em>Quite a character.</em></h1><p class="lede">Every town begins with someone.<br>Find a face, fit a hat, and make them your own.</p></div><div class="intro-note"><span class="note-icon">✳</span><p>One character.<br>Four sides of the story.</p><span>PROCEDURAL · MODULAR · REPEATABLE</span></div></section>
+    <div class="workshop">
+      <section class="viewer panel" aria-label="Character preview">
+        <div class="panel-heading"><span><span class="tiny-square"></span> THE LOOKING GLASS</span><span id="preview-label">FRONT VIEW</span></div>
+        <div class="stage" id="stage"><span class="stage-corner tl"></span><span class="stage-corner tr"></span><span class="stage-corner bl"></span><span class="stage-corner br"></span><div class="stage-coordinates">48 × 48 PX<br>TRUE PIXEL SCALE</div><div class="pedestal"></div><canvas id="hero" width="48" height="48" aria-label="Generated player preview"></canvas><span class="stage-compass">N<br><span>╋</span></span><div class="stage-tools"><button id="grid-toggle" class="icon-button" aria-label="Toggle preview grid" aria-pressed="true">▦</button><button id="rotate-toggle" class="icon-button" aria-label="Auto rotate character" aria-pressed="false">↻</button></div></div>
+        <div class="identity"><div><span class="eyebrow">PLAYER / 001</span><h2 id="player-name"></h2></div><span class="identity-stamp">READY TO<br>EXIST</span></div>
+        <div class="views" id="views"></div>
+        <div class="viewer-footer"><span><span class="status-dot"></span> All views share one character</span><span>1× ASSET / 6× PREVIEW</span></div>
+      </section>
+      <aside class="editor panel">
+        <div class="panel-heading"><span><span class="tiny-square"></span> MAKE IT YOURS</span><span>01 — 03</span></div>
+        <div class="seed-box"><label class="eyebrow" for="seed">CHARACTER SEED</label><div class="seed-row"><input id="seed" maxlength="64" spellcheck="false" aria-label="Character seed"><button id="generate" class="dark-button">↗ Generate</button></div><p>A seed is the starting point. Save a recipe to keep your edits.</p></div>
+        <div id="part-controls"></div>
+        <section class="palette-section"><div class="section-label"><span class="eyebrow">THE PALETTE</span><span id="palette-name"></span></div><div class="palettes" id="palettes"></div></section>
+        <div class="random-row"><button id="randomize" class="random-button"><span>⚄</span> Meet someone new <span>↗</span></button><p>Locked parts stay just as they are.</p></div>
+      </aside>
+    </div>
+    <section class="bottom-row"><div class="export-copy"><p class="eyebrow">FROM THE WORKSHOP TO YOUR WORLD</p><h2>A little person. Ready to go.</h2><p>Four directions, three parts, and a recipe to bring them back.</p></div><div class="export-actions"><div><button id="import" class="text-button">↑ Import recipe</button><button id="save-recipe" class="text-button">↓ Recipe</button><button id="save-png" class="text-button">↓ Sprite sheet</button></div><button id="export" class="export-button">Export player assets <span>↓</span></button><span class="export-info">ZIP · TRANSPARENT PNGs + JSON · 48 × 48 / FRAME</span></div></section>
+    <section class="lineup-section"><div class="section-label"><span class="eyebrow">A FEW FAMILIAR FACES</span><span>Choose a starting point <span aria-hidden="true">↙</span></span></div><div class="lineup" id="lineup"></div></section>
+    <footer><span>AGENT TOWN <span class="footer-cross">✳</span> A WORLD IN THE MAKING</span><span>CHAPTER 01 — THE PLAYER</span></footer>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div><input type="file" id="recipe-file" accept=".json,application/json" hidden>
+  <script type="module" src="src/app.js"></script>
+</body></html>
