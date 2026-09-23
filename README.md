@@ -1,16 +1,20 @@
-# Agent Town — Player Workshop
+# Agent Town — Shared World & Player Workshop
 
 A procedural, retro player asset generator for a Dwarf Fortress-inspired world. A player has **head, hat, and body**, gender, faction, class, and generated equipment. One small voxel character produces consistent **front, back, left-facing, and right-facing** pixel sprites, including sword and pickaxe swings.
 
 ![Sword and pickaxe animation previews](examples/action-preview.gif)
 
-## Run
+## Shared world
+
+A large, flat C/WASM world with forest, beach, ocean, volcanic, and jungle biomes, resource collection, construction, and a Cloudflare multiplayer authority. **One shared persistent world for everyone.** See [WORLD.md](WORLD.md) for setup, architecture, controls, and current limits.
+
+## Run the workshop
 
 Node.js 20 or later. No dependencies or package install.
 
 ```sh
 npm start       # http://127.0.0.1:4173
-npm test        # generator, animation, and export checks
+npm test        # generator + world checks (native Clang required)
 npm run build   # dist/player-workshop.html — open directly in a browser
 ```
 

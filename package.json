@@ -1,4 +1,24 @@
 {
-  "name": "agent-town", "version": "0.1.0", "private": true, "type": "module",
-  "scripts": { "start": "node server.js", "test": "node --test tests/*.test.js", "build": "node scripts/build.js" }
+  "name": "agent-town",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/*.test.js",
+    "build": "node scripts/build.js",
+    "build:world": "node scripts/build-world.js",
+    "build:site": "node scripts/build.js && node scripts/build-world.js && node scripts/build-site.js",
+    "dev:world": "wrangler dev --ip 127.0.0.1 --port 8787",
+    "types": "wrangler types",
+    "deploy": "wrangler deploy",
+    "test:world": "node --test tests/world.test.js",
+    "test:online": "node tests/online.js"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260922.1",
+    "@types/node": "^26.6.2",
+    "wrangler": "^4.136.3",
+    "ws": "^8.21.3"
+  }
 }
