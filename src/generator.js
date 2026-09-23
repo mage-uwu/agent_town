@@ -1,10 +1,16 @@
+import { ACTIONS, ACTION_FRAMES, ACTION_FPS, ACTION_SIZE, ACTION_ANCHOR, unit, cross, actionTool, rigPose } from './rig.js';
+
 /** Pure, dependency-free player generator. Coordinates: +Y up, +Z face, +X right. */
-export const VERSION = 1;
+export const VERSION = 2;
 export const SIZE = 48;
 export const DIRECTIONS = ['front', 'back', 'left', 'right'];
 export const PARTS = ['body', 'head', 'hat'];
+export const RENDER_LAYERS = [...PARTS, 'tool'];
+export const GENDERS = ['male', 'female', 'nonbinary'];
+export const TOOL_STYLES = {sword:['longsword','falchion','rapier'],pickaxe:['crescent','prospector','warpick']};
+export const TOOL_MATERIALS = {iron:{name:'Iron',base:'#9aaab3',edge:'#dae6dc'},bronze:{name:'Bronze',base:'#b4854e',edge:'#f3d39a'},obsidian:{name:'Obsidian',base:'#51465f',edge:'#a99cc8'}};
 export const STYLES = {
-  head: ['braided', 'full', 'trimmed', 'clean'],
+  head: ['braided', 'full', 'trimmed', 'clean', 'bob', 'ponytail'],
   hat: ['ranger', 'wizard', 'helmet', 'hood', 'none'],
   body: ['tunic', 'coat', 'armor', 'apron'],
 };
@@ -28,19 +34,27 @@ function random(seed) {
   return () => { a += 0x6D2B79F5; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 }
 function pick(rng, values) { return values[Math.floor(rng() * values.length)]; }
-export function generatePart(part, seed) {
+export function generatePart(part, seed, gender = 'male') {
   if (!PARTS.includes(part)) throw new Error('Unknown player part');
   const rng = random(`${part}:${seed}`);
-  const style = pick(rng, STYLES[part]);
+  const headChoices=gender==='female'?['clean','bob','ponytail']:gender==='nonbinary'?['clean','trimmed','bob','ponytail']:['braided','full','trimmed','clean'];
+  const style = pick(rng, part==='head'?headChoices:STYLES[part]);
   if (part === 'head') return { seed: String(seed), style, hair: pick(rng, HAIRS), width: pick(rng, [5, 6]), brow: pick(rng, [0, 1]) };
   if (part === 'hat') return { seed: String(seed), style, height: pick(rng, [8, 9, 10]), feather: rng() > 0.35 };
   return { seed: String(seed), style, width: pick(rng, [6, 7]), buttons: rng() > 0.45 };
 }
-export function createPlayer(seed = 'COPPER-042') {
-  const rng = random(seed);
-  return { schemaVersion: VERSION, type: 'player', seed: String(seed), name: pick(rng, ['Bram', 'Orrin', 'Moss', 'Wren', 'Hilda', 'Flint', 'Thora', 'Merrin']) + ' ' + pick(rng, ['Copperbrook', 'Ironfern', 'Ashvale', 'Stonebriar', 'Oakmantle', 'Emberfoot']), palette: pick(rng, Object.keys(PALETTES)), skin: SKINS[hash(seed) % SKINS.length], parts: Object.fromEntries(PARTS.map(part => [part, generatePart(part, seed)])) };
+export function generateTool(type, seed) {
+  if(!TOOL_STYLES[type])throw new Error('Unknown tool type');
+  const rng=random(`${type}:${seed}`);
+  return {type,seed:String(seed),style:pick(rng,TOOL_STYLES[type]),material:pick(rng,Object.keys(TOOL_MATERIALS)),length:pick(rng,type==='sword'?[13,15,17]:[10,12,14]),guard:pick(rng,[3,4,5]),grip:pick(rng,['#684431','#473c4c','#794743']),gem:pick(rng,['#b75c47','#6ba4a5','#c8ad5d'])};
+}
+export function createPlayer(seed = 'COPPER-005', gender = 'male') {
+  if(!GENDERS.includes(gender))throw new Error('Unknown gender');
+  const rng = random(seed), names=gender==='female'?['Bryn','Hilda','Moss','Wren','Ada','Fenna','Thora','Merrin']:gender==='nonbinary'?['Bram','Ash','Moss','Wren','Ember','Flint','Rowan','Merrin']:['Bram','Orrin','Moss','Wren','Dorin','Flint','Torren','Merrin'];
+  return { schemaVersion: VERSION, type: 'player', seed: String(seed), gender, name: pick(rng,names) + ' ' + pick(rng, ['Copperbrook', 'Ironfern', 'Ashvale', 'Stonebriar', 'Oakmantle', 'Emberfoot']), palette: pick(rng, Object.keys(PALETTES)), skin: SKINS[hash(seed) % SKINS.length], parts: Object.fromEntries(PARTS.map(part => [part, generatePart(part, seed, gender)])), equipment:'none', tools:{sword:generateTool('sword',seed),pickaxe:generateTool('pickaxe',seed)} };
 }
 export function validatePlayer(input) {
+  if(input?.schemaVersion===1)input={...input,schemaVersion:VERSION,gender:'male',equipment:'none',tools:{sword:generateTool('sword',input.seed),pickaxe:generateTool('pickaxe',input.seed)}};
   if (!input || input.schemaVersion !== VERSION || input.type !== 'player' || !PALETTES[input.palette]) throw new Error('Not a supported Agent Town player recipe.');
   if (typeof input.name !== 'string' || input.name.length > 100 || typeof input.seed !== 'string' || input.seed.length > 100) throw new Error('Invalid name or seed.');
   for (const part of PARTS) {
@@ -51,25 +65,83 @@ export function validatePlayer(input) {
   if (!SKINS.includes(input.skin) || !HAIRS.includes(head.hair) || ![5, 6].includes(head.width) || ![0, 1].includes(head.brow)) throw new Error('Invalid head recipe.');
   if (![8, 9, 10].includes(hat.height) || typeof hat.feather !== 'boolean') throw new Error('Invalid hat recipe.');
   if (![6, 7].includes(body.width) || typeof body.buttons !== 'boolean') throw new Error('Invalid body recipe.');
+  if(!GENDERS.includes(input.gender)||!['none','sword','pickaxe'].includes(input.equipment))throw new Error('Invalid gender or equipment.');
+  const tools={};
+  for(const type of ['sword','pickaxe']) {
+    const t=input.tools?.[type];
+    if(!t || t.type!==type || typeof t.seed!=='string' || t.seed.length>100 || !TOOL_STYLES[type].includes(t.style) || !Object.hasOwn(TOOL_MATERIALS,t.material) || !(type==='sword'?[13,15,17]:[10,12,14]).includes(t.length) || ![3,4,5].includes(t.guard) || !['#684431','#473c4c','#794743'].includes(t.grip) || !['#b75c47','#6ba4a5','#c8ad5d'].includes(t.gem))throw new Error(`Invalid ${type} recipe.`);
+    tools[type]={type,seed:t.seed,style:t.style,material:t.material,length:t.length,guard:t.guard,grip:t.grip,gem:t.gem};
+  }
   // Copy only public recipe fields; imported metadata cannot affect the renderer.
-  return { schemaVersion: VERSION, type: 'player', seed: input.seed, name: input.name, palette: input.palette, skin: input.skin, parts: { head: {seed:head.seed, style:head.style, hair:head.hair, width:head.width, brow:head.brow}, hat: {seed:hat.seed, style:hat.style, height:hat.height, feather:hat.feather}, body: {seed:body.seed, style:body.style, width:body.width, buttons:body.buttons} } };
+  return { schemaVersion: VERSION, type: 'player', seed: input.seed, gender:input.gender, equipment:input.equipment, tools, name: input.name, palette: input.palette, skin: input.skin, parts: { head: {seed:head.seed, style:head.style, hair:head.hair, width:head.width, brow:head.brow}, hat: {seed:hat.seed, style:hat.style, height:hat.height, feather:hat.feather}, body: {seed:body.seed, style:body.style, width:body.width, buttons:body.buttons} } };
 }
 
-const N = 48, OFFSET = 24;
+const N = 64, OFFSET = 32;
 const index = (x, y, z) => (y * N + z + OFFSET) * N + x + OFFSET;
-export function buildModel(player, pose = 0) {
+function toolColors(tool) {const material=TOOL_MATERIALS[tool.material];return [material.base,material.edge,tool.grip,'#c6a767',tool.gem];}
+/** Generate canonical tool geometry around a grip at (0,0,0), then inverse-sample a rigid transform. */
+function transformTool(tool, position, axis) {
+  const local=new Uint8Array(N**3),result=new Uint8Array(N**3);
+  const put=(x,y,z,m)=>{local[index(x,y+8,z)]=m;};
+  const box=(x0,y0,z0,x1,y1,z1,m)=>{for(let y=y0;y<y1;y++)for(let z=z0;z<z1;z++)for(let x=x0;x<x1;x++)put(x,y,z,m);};
+  if(tool.type==='sword') {
+    box(-1,-3,-1,1,4,1,13);box(-2,-4,-1,2,-2,1,14);box(-1,-4,1,1,-2,2,15);
+    const guard=tool.guard;box(-guard,3,-1,guard,5,1,14);
+    if(tool.style==='rapier') {box(-guard,0,-1,-guard+1,4,1,14);box(-guard,0,-1,0,1,1,14);}
+    for(let y=5;y<tool.length+5;y++) {
+      const t=(y-5)/tool.length,tip=t>.8;
+      const half=tool.style==='rapier'?1:tool.style==='falchion'?(t>.3&&!tip?3:2):2;
+      const curve=tool.style==='falchion'?Math.floor(t*2):0;
+      const radius=tip?1:half;
+      box(-radius+curve,y,-1,radius+curve,y+1,1,11);
+      box(-radius+curve,y,0,-radius+curve+1,y+1,1,12);
+    }
+    box(-1,5,1,1,8,2,14);put(0,6,2,15);
+  } else {
+    box(-1,-5,-1,1,tool.length+1,1,13);
+    for(let y=-4;y<5;y+=3)box(-1,y,-1,1,y+1,1,14);
+    const reach=tool.guard+3;
+    for(let x=-reach;x<=reach;x++) {
+      const distance=Math.abs(x),bend=tool.style==='crescent'?Math.floor(distance*.48):tool.style==='warpick'?Math.floor(distance*.25):Math.floor(distance*.12);
+      const thick=distance<reach-2?2:1;
+      box(x,tool.length-bend,-1,x+1,tool.length-bend+thick,1,11);put(x,tool.length-bend+thick,0,12);
+      if(tool.style==='prospector'&&x<-reach+2)box(x,tool.length-2,-2,x+1,tool.length+2,2,11);
+    }
+    box(-2,tool.length-1,-2,2,tool.length+2,2,14);box(-1,tool.length,2,1,tool.length+2,3,15);
+  }
+  const u=unit(cross(axis,Math.abs(axis[2])>.99?[0,1,0]:[0,0,1])),v=cross(u,axis);
+  const corners=[];
+  for(const x of [-10,10])for(const y of [-6,tool.length+6])for(const z of [-3,3])corners.push(position.map((p,i)=>p+x*u[i]+y*axis[i]+z*v[i]));
+  const lo=[0,1,2].map(i=>Math.floor(Math.min(...corners.map(p=>p[i])))),hi=[0,1,2].map(i=>Math.ceil(Math.max(...corners.map(p=>p[i]))));
+  for(let y=Math.max(0,lo[1]);y<Math.min(N,hi[1]);y++)for(let z=Math.max(-OFFSET,lo[2]);z<Math.min(OFFSET,hi[2]);z++)for(let x=Math.max(-OFFSET,lo[0]);x<Math.min(OFFSET,hi[0]);x++) {
+    const delta=[x+.5-position[0],y+.5-position[1],z+.5-position[2]],dot=a=>a.reduce((n,k,i)=>n+k*delta[i],0);
+    const lx=Math.floor(dot(u)),ly=Math.floor(dot(axis))+8,lz=Math.floor(dot(v));
+    if(lx>=-OFFSET&&lx<OFFSET&&ly>=0&&ly<N&&lz>=-OFFSET&&lz<OFFSET)result[index(x,y,z)]=local[index(lx,ly,lz)];
+  }
+  return result;
+}
+export function buildToolModel(tool) {
+  const layers=Object.fromEntries(RENDER_LAYERS.map(p=>[p,new Uint8Array(N**3)]));
+  layers.tool=transformTool(tool,[0,12,0],[0,1,0]);
+  return {layers,colors:[null,...Array(10).fill('#222222'),...toolColors(tool)],size:48,anchor:{x:24,y:41}};
+}
+export function buildModel(player, options = {}) {
+  const action=options.action??'idle',frame=options.frame??0;
+  if(!ACTIONS.includes(action))throw new Error('Unknown action');
+  const equipped=actionTool(action,options.equipment??player.equipment), tool=equipped==='none'?null:player.tools[equipped];
   const { head, hat, body } = player.parts, palette = PALETTES[player.palette];
-  const layers = Object.fromEntries(PARTS.map(p => [p, new Uint8Array(N ** 3)]));
-  const colors = [null, palette.cloth, palette.hat, palette.trim, palette.leather, palette.metal, player.skin, head.hair, '#24252c', '#e8dcad', '#b05c41'];
+  const layers = Object.fromEntries(RENDER_LAYERS.map(p => [p, new Uint8Array(N ** 3)]));
+  const colors = [null, palette.cloth, palette.hat, palette.trim, palette.leather, palette.metal, player.skin, head.hair, '#24252c', '#e8dcad', '#b05c41', ...(tool?toolColors(tool):['#9aaab3','#dae6dc','#684431','#c6a767','#6ba4a5'])];
   let layer;
-  const set = (x,y,z,m) => { if (x>=-24 && x<24 && y>=0 && y<48 && z>=-24 && z<24) layer[index(x,y,z)] = m; };
+  const set = (x,y,z,m) => { if (x>=-32 && x<32 && y>=0 && y<64 && z>=-32 && z<32) layer[index(x,y,z)] = m; };
   const box = (x0,y0,z0,x1,y1,z1,m) => { for(let y=y0;y<y1;y++) for(let z=z0;z<z1;z++) for(let x=x0;x<x1;x++) set(x,y,z,m); };
   const ellipsoid = (cx,cy,cz,rx,ry,rz,m) => {
     for(let y=Math.floor(cy-ry);y<cy+ry;y++) for(let z=Math.floor(cz-rz);z<cz+rz;z++) for(let x=Math.floor(cx-rx);x<cx+rx;x++)
       if (((x+.5-cx)/rx)**2+((y+.5-cy)/ry)**2+((z+.5-cz)/rz)**2<=1) set(x,y,z,m);
   };
   layer = layers.body;
-  const w = body.width, stride = [0, 2, 0, -2][pose % 4];
+  const w = body.width-(player.gender==='female'?1:0), stride=0, rig=rigPose(action,frame,w);
+  const limb=(a,b,r,m)=>{const length=Math.hypot(...a.map((v,i)=>v-b[i]));for(let t=0;t<=length;t+=.5){const f=length?t/length:0;ellipsoid(...a.map((v,i)=>v+(b[i]-v)*f),r,r,r,m);}};
   // Legs and opposite arm swing share the same rig in every view.
   for (const side of [-1,1]) {
     const x = side < 0 ? -5 : 1, step = stride * side;
@@ -81,12 +153,20 @@ export function buildModel(player, pose = 0) {
   const suitMaterial = body.style === 'armor' ? 5 : 1;
   ellipsoid(0,14,0,w+1,8,4.5,suitMaterial);
   box(-w,9,-3,w,19,4,suitMaterial);
+  if(player.gender==='female') {box(-w,12,-4,-w+1,17,5,0);box(w-1,12,-4,w,17,5,0);} 
   if(body.style === 'coat') { box(-w,6,-3,-1,12,4,1); box(1,6,-3,w,12,4,1); box(-1,10,4,1,22,5,3); }
   if(body.style === 'apron') { box(-4,7,4,4,18,5,4); box(-2,17,4,2,22,5,4); box(-4,10,5,4,12,6,3); box(-w,14,-5,w,15,-4,4); }
   if(body.style === 'armor') { box(-w,16,4,w,17,5,3); box(-1,12,4,1,21,5,3); box(-w,10,-4,w,11,4,5); }
   box(-w,11,-4,w,13,5,4); box(-2,11,5,2,14,6,3); box(-1,12,6,1,13,7,4);
   for(const side of [-1,1]) {
     const x = side*(w+1), swing = -stride*side;
+    if(tool&&(side===1||action==='pickaxe_swing')) {
+      const hand=side===1?rig.hand:rig.hand.map((v,i)=>v+rig.axis[i]*3);
+      const shoulder=[x,19,0],elbow=[(x+hand[0])*.5,Math.min(18,hand[1]-2),hand[2]*.55-1];
+      limb(shoulder,elbow,2.5,suitMaterial);limb(elbow,hand,1.8,suitMaterial);ellipsoid(...hand,2.2,2.2,2.2,6);
+      ellipsoid(...hand.map((v,i)=>v+(elbow[i]-v)*.25),2,2,2,3);
+      continue;
+    }
     ellipsoid(x,18,swing,3.5,4,3.5,suitMaterial);
     box(x-2,12,swing-2,x+2,18,swing+3,suitMaterial);
     box(x-2,12,swing-2,x+2,14,swing+3,3);
@@ -109,7 +189,7 @@ export function buildModel(player, pose = 0) {
   box(-4,28+head.brow,4,-1,29+head.brow,6,7); box(1,28+head.brow,4,4,29+head.brow,6,7);
   box(-1,24,5,1,27,7,6);
   box(-2,22,5,2,23,6,10);
-  if(head.style !== 'clean') {
+  if(['braided','full','trimmed'].includes(head.style)) {
     const length = {trimmed:3, full:7, braided:8}[head.style];
     ellipsoid(0,23-length/2,3.3,hw-.5,length/2+2,3.3,7);
     box(-hw+1,23,4,hw-1,25,6,7); box(-1,24,6,1,26,7,6);
@@ -119,6 +199,8 @@ export function buildModel(player, pose = 0) {
     }
   }
   if(head.style==='braided') { box(-2,20,-6,2,27,-4,7); box(-2,21,-6,2,23,-5,3); }
+  if(head.style==='bob') {box(-hw-1,22,-4,-hw+1,29,3,7);box(hw-1,22,-4,hw+1,29,3,7);box(-hw,22,-6,hw,28,-3,7);}
+  if(head.style==='ponytail') {ellipsoid(0,27,-6,3,4,2,7);box(-2,18,-7,2,27,-4,7);box(-2,24,-8,2,26,-6,3);for(let y=18;y<24;y+=2)box(-1,y,-8,2,y+1,-6,7);}
   // Hat geometry is a volume, never four independently drawn templates.
   layer = layers.hat;
   if(hat.style==='ranger') {
@@ -139,7 +221,16 @@ export function buildModel(player, pose = 0) {
     box(-8,25,-3,-6,31,4,2); box(6,25,-3,8,31,4,2);
     box(-8,24,-5,8,26,2,2); box(-6,25,3,-4,27,5,3); box(4,25,3,6,27,5,3);
   }
-  return {layers, colors};
+  if(rig.bob)for(const part of PARTS) {
+    const original=layers[part],shifted=new Uint8Array(N**3);
+    for(let y=0;y<N;y++)for(let z=-OFFSET;z<OFFSET;z++)for(let x=-OFFSET;x<OFFSET;x++){const m=original[index(x,y,z)];if(m)shifted[index(x,y>8?y-rig.bob:y,z)]=m;}
+    layers[part]=shifted;
+  }
+  if(tool) {
+    const position=rig.hand.map((v,i)=>i===1?v-rig.bob:v);
+    layers.tool=transformTool(tool,position,rig.axis);
+  }
+  return {layers, colors, action, rig: {...rig, tool:equipped}, size:action==='idle'?SIZE:ACTION_SIZE, anchor:action==='idle'?{x:24,y:43}:ACTION_ANCHOR};
 }
 
 function rgb(hex) { return [1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)); }
@@ -148,55 +239,84 @@ function shade(hex, level) {
   return color.map((v,i)=>Math.max(0,Math.min(255,Math.round(v*factor+(level===3?[7,5,0][i]:0)))));
 }
 /** Orthographic ray projection: all views sample the exact same part volumes. */
-export function renderModel(model, direction, visible = PARTS) {
+export function renderModel(model, direction, visible = RENDER_LAYERS) {
   if(!DIRECTIONS.includes(direction)) throw new Error('Unknown direction');
-  const out = new Uint8ClampedArray(SIZE*SIZE*4), owners = new Uint8Array(SIZE*SIZE), depth = new Float32Array(SIZE*SIZE).fill(-Infinity);
+  const size=model.size??SIZE,anchor=model.anchor??{x:24,y:43};
+  const out = new Uint8ClampedArray(size*size*4), owners = new Uint8Array(size*size), depth = new Float32Array(size*size).fill(-Infinity);
   const voxels = new Uint8Array(N**3), parts = new Uint8Array(N**3);
-  for(const part of PARTS) if(visible.includes(part)) {
-    const data=model.layers[part], id=PARTS.indexOf(part)+1;
+  for(const part of RENDER_LAYERS) if(visible.includes(part)) {
+    const data=model.layers[part], id=RENDER_LAYERS.indexOf(part)+1;
     for(let i=0;i<data.length;i++) if(data[i]) {voxels[i]=data[i];parts[i]=id;}
   }
   const swatches = model.colors.map(c=>c ? [0,1,2,3].map(level=>shade(c,level)) : null);
-  const sample=(x,y,z)=> x>=-24&&x<24&&z>=-24&&z<24&&y>=0&&y<48 ? voxels[index(x,y,z)] : 0;
-  for(let py=0;py<SIZE;py++) for(let px=0;px<SIZE;px++) {
-    const u=px-23.5, h=43-(py+.5);
-    for(let v=18;v>=-18;v-=.25) {
+  const sample=(x,y,z)=> x>=-32&&x<32&&z>=-32&&z<32&&y>=0&&y<64 ? voxels[index(x,y,z)] : 0;
+  for(let py=0;py<size;py++) for(let px=0;px<size;px++) {
+    const u=px-anchor.x+.5, h=anchor.y-(py+.5);
+    for(let v=31;v>=-31;v-=.25) {
       const y=Math.floor(h+v*.5);
       let x,z;
       if(direction==='front') {x=Math.floor(u);z=Math.floor(v);}
       else if(direction==='back') {x=Math.floor(-u);z=Math.floor(-v);}
-      else if(direction==='left') {x=Math.floor(-v);z=Math.floor(u);}
-      else {x=Math.floor(v);z=Math.floor(-u);}
+      else if(direction==='left') {x=Math.floor(v);z=Math.floor(-u);}
+      else {x=Math.floor(-v);z=Math.floor(u);}
       const mat=sample(x,y,z); if(!mat) continue;
       let level=2;
       if(!sample(x,y+1,z)) level=3;
       else if(sample(x,y+2,z)) level=1;
       // Broad color clusters: tiny, deterministic surface highlights, no random pixel noise.
       if(mat===7 && (x+z+48)%4===0 && level===2) level=1;
-      const i=py*SIZE+px, c=swatches[mat][level];
+      const i=py*size+px, c=swatches[mat][level];
       out.set([...c,255],i*4); owners[i]=parts[index(x,y,z)]; depth[i]=v;
       break;
     }
   }
   // One-pixel silhouette, kept inside the shared 48px registration box.
   const before=out.slice();
-  for(let y=1;y<SIZE-1;y++) for(let x=1;x<SIZE-1;x++) {
-    const i=y*SIZE+x;
+  for(let y=1;y<size-1;y++) for(let x=1;x<size-1;x++) {
+    const i=y*size+x;
     if(before[i*4+3]) continue;
-    const neighbor=[i-1,i+1,i-SIZE,i+SIZE].find(j=>before[j*4+3]);
+    const neighbor=[i-1,i+1,i-size,i+size].find(j=>before[j*4+3]);
     if(neighbor!==undefined) {out.set([35,32,36,255],i*4);owners[i]=owners[neighbor];}
   }
-  return { width: SIZE, height: SIZE, pixels: out, owners, depth };
+  return { width: size, height: size, pixels: out, owners, depth };
 }
-export function renderPlayer(player, direction = 'front', visible = PARTS, pose = 0) {
-  return renderModel(buildModel(player,pose),direction,visible);
+export function renderPlayer(player, direction = 'front', visible = RENDER_LAYERS, options = {}) {
+  return renderModel(buildModel(player,options),direction,visible);
 }
-export function generateSheet(player, visible = PARTS) {
+export function generateSheet(player, visible = RENDER_LAYERS) {
   const width=SIZE*4, height=SIZE, pixels=new Uint8ClampedArray(width*height*4);
   const model=buildModel(player);
   DIRECTIONS.forEach((direction,col)=>{ const frame=renderModel(model,direction,visible); for(let y=0;y<SIZE;y++) pixels.set(frame.pixels.subarray(y*SIZE*4,(y+1)*SIZE*4),(y*width+col*SIZE)*4); });
   return { width,height,pixels };
 }
+export function animationFrames(player, action) {
+  if(!ACTIONS.includes(action)||action==='idle')throw new Error('Choose a swing animation');
+  return Array.from({length:ACTION_FRAMES},(_,frame)=>{const model=buildModel(player,{action,frame});return Object.fromEntries(DIRECTIONS.map(d=>[d,renderModel(model,d)]));});
+}
+export function generateAnimationSheet(player, action) {
+  const frames=animationFrames(player,action),width=ACTION_SIZE*ACTION_FRAMES,height=ACTION_SIZE*4,pixels=new Uint8ClampedArray(width*height*4);
+  DIRECTIONS.forEach((d,row)=>frames.forEach((f,col)=>{for(let y=0;y<ACTION_SIZE;y++)pixels.set(f[d].pixels.subarray(y*ACTION_SIZE*4,(y+1)*ACTION_SIZE*4),((row*ACTION_SIZE+y)*width+col*ACTION_SIZE)*4);}));
+  return {width,height,pixels};
+}
+export function toolSheet(tool) {
+  const model=buildToolModel(tool),width=SIZE*4,height=SIZE,pixels=new Uint8ClampedArray(width*height*4);
+  DIRECTIONS.forEach((d,col)=>{const f=renderModel(model,d,['tool']);for(let y=0;y<SIZE;y++)pixels.set(f.pixels.subarray(y*SIZE*4,(y+1)*SIZE*4),(y*width+col*SIZE)*4);});
+  return {width,height,pixels};
+}
 export function manifest(player) {
-  return { generator:'agent-town/player', generatorVersion:VERSION, player:validatePlayer(player), image:'player.png', size:{w:192,h:48}, frameSize:{w:48,h:48}, alpha:true, anchor:{x:24,y:43}, directionOrder:DIRECTIONS, frames:Object.fromEntries(DIRECTIONS.map((dir,i)=>[dir,{x:i*48,y:0,w:48,h:48}])), parts:Object.fromEntries(PARTS.map(p=>[p,{image:`parts/${p}.png`,visibleLayer:`layers/${p}.png`,sameRegistration:true,compositing:'Overlay visible layers to reconstruct this player. Re-render combined voxel model after swapping parts for correct occlusion.'}])) };
+  const registered=part=>({image:`parts/${part}.png`,visibleLayer:`layers/${part}.png`,sameRegistration:true});
+  return {
+    generator:'agent-town/player',generatorVersion:VERSION,player:validatePlayer(player),
+    image:'player.png',size:{w:192,h:48},frameSize:{w:48,h:48},alpha:true,anchor:{x:24,y:43},directionOrder:DIRECTIONS,
+    frames:Object.fromEntries(DIRECTIONS.map((dir,i)=>[dir,{x:i*48,y:0,w:48,h:48}])),
+    parts:Object.fromEntries(PARTS.map(p=>[p,registered(p)])),equipmentLayer:registered('tool'),
+    tools:Object.fromEntries(['sword','pickaxe'].map(type=>[type,{image:`tools/${type}.png`,recipe:player.tools[type],frameSize:{w:48,h:48},gripAnchor:{x:24,y:29},directionOrder:DIRECTIONS}])),
+    animations:Object.fromEntries(['sword_swing','pickaxe_swing'].map(action=>[action,{
+      image:`animations/${action}.png`,size:{w:512,h:256},frameSize:{w:64,h:64},anchor:ACTION_ANCHOR,
+      frameCount:ACTION_FRAMES,fps:ACTION_FPS,loop:true,hitFrame:5,equippedTool:actionTool(action,player.equipment),
+      rows:DIRECTIONS,columns:'time',
+      frames:Object.fromEntries(DIRECTIONS.map((d,row)=>[d,Array.from({length:ACTION_FRAMES},(_,frame)=>({x:frame*64,y:row*64,w:64,h:64,durationMs:1000/ACTION_FPS,event:frame===5?(action==='sword_swing'?'sword_hit':'pickaxe_hit'):null}))]))
+    }])),
+    compositing:'Overlay visible layers to reconstruct the standing player. Re-render combined voxel model after swapping parts for correct occlusion.'
+  };
 }

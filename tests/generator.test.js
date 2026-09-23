@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {inflateSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
-import {createPlayer,generatePart,buildModel,renderModel,generateSheet,validatePlayer,manifest,PARTS,DIRECTIONS,STYLES} from '../src/generator.js';
+import {createPlayer,generatePart,buildModel,renderModel,generateSheet,validatePlayer,manifest,PARTS,DIRECTIONS,STYLES,RENDER_LAYERS,GENDERS,TOOL_STYLES,generateTool,animationFrames,generateAnimationSheet,toolSheet} from '../src/generator.js';
 import {encodePNG,exportBundle,crc32} from '../src/export.js';
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 
@@ -41,7 +41,7 @@ test('every style combination has four distinct, unclipped, binary-alpha views',
     }
     assert.equal(new Set(hashes).size,4);
   }
-  assert.equal(checked,320);
+  assert.equal(checked,480);
 });
 test('no hat produces a fully transparent isolated hat sheet',()=>{
   const p=createPlayer();p.parts.hat.style='none';assert.ok(generateSheet(p,['hat']).pixels.every(x=>x===0));
@@ -55,11 +55,52 @@ test('exported PNG survives an independent zlib decode without changing a pixel'
   const sheet=generateSheet(createPlayer('COPPER-005')),decoded=decodePNG(encodePNG(sheet));assert.equal(decoded.w,192);assert.equal(decoded.h,48);assert.deepEqual(new Uint8Array(decoded.pixels),new Uint8Array(sheet.pixels));
 });
 test('ZIP has valid checksums, exact layer reconstruction, and resolvable manifest paths',()=>{
-  const player=createPlayer('COPPER-005'),bundle=exportBundle(player),files=readZIP(bundle),meta=JSON.parse(files['player.json']);assert.equal(Object.keys(files).length,9);
-  assert.deepEqual(meta,manifest(player));const whole=decodePNG(files[meta.image]),layers=PARTS.map(p=>decodePNG(files[meta.parts[p].visibleLayer]));
+  const player=createPlayer('COPPER-005');player.equipment='sword';const bundle=exportBundle(player),files=readZIP(bundle),meta=JSON.parse(files['player.json']);assert.equal(Object.keys(files).length,15);
+  assert.deepEqual(meta,manifest(player));const whole=decodePNG(files[meta.image]),layers=[...PARTS.map(p=>decodePNG(files[meta.parts[p].visibleLayer])),decodePNG(files[meta.equipmentLayer.visibleLayer])];
   for(const p of PARTS){assert.ok(files[meta.parts[p].image]);const isolated=decodePNG(files[meta.parts[p].image]);assert.equal(isolated.w,whole.w);assert.equal(isolated.h,whole.h);}
   const composite=Buffer.alloc(whole.pixels.length);
   for(const layer of layers)for(let i=0;i<composite.length;i+=4)if(layer.pixels[i+3]){assert.equal(composite[i+3],0,'visible layers should not overlap');layer.pixels.copy(composite,i,i,i+4);}
   assert.deepEqual(composite,whole.pixels);
+  for(const action of ['sword_swing','pickaxe_swing']){const a=meta.animations[action],decoded=decodePNG(files[a.image]);assert.equal(decoded.w,a.size.w);assert.equal(decoded.h,a.size.h);assert.equal(a.frames.front.length,8);assert.equal(a.frames.front[5].event,action==='sword_swing'?'sword_hit':'pickaxe_hit');}
+  for(const type of ['sword','pickaxe'])assert.ok(files[meta.tools[type].image]);
   assert.equal(digest(bundle),digest(exportBundle(player)));
+});
+
+
+test('gender recipes are repeatable and allow every head style',()=>{
+  for(const gender of GENDERS){const p=createPlayer('COPPER-005',gender);assert.equal(validatePlayer(p).gender,gender);assert.deepEqual(p,createPlayer('COPPER-005',gender));for(const style of STYLES.head){p.parts.head.style=style;assert.equal(validatePlayer(p).parts.head.style,style);}}
+  const old=createPlayer('OLD');delete old.gender;delete old.equipment;delete old.tools;old.schemaVersion=1;const migrated=validatePlayer(old);assert.equal(migrated.schemaVersion,2);assert.equal(migrated.gender,'male');assert.ok(migrated.tools.pickaxe);
+});
+test('tools have repeatable geometry and real seed diversity',()=>{
+  for(const type of ['sword','pickaxe']) {
+    const hashes=new Set();
+    for(let n=0;n<24;n++){const tool=generateTool(type,`TOOL-${n}`);assert.deepEqual(tool,generateTool(type,`TOOL-${n}`));hashes.add(digest(toolSheet(tool).pixels));}
+    assert.ok(hashes.size>=20,`${type} variants should change rendered assets`);
+  }
+  const p=createPlayer();p.equipment='sword';const before=buildModel(p);p.tools.sword=generateTool('sword','DIFFERENT');const after=buildModel(p);
+  for(const part of PARTS)assert.deepEqual(before.layers[part],after.layers[part]);assert.notDeepEqual(before.layers.tool,after.layers.tool);
+  assert.throws(()=>validatePlayer({...p,gender:'unknown'}));const bad=structuredClone(p);bad.tools.sword.length=999;assert.throws(()=>validatePlayer(bad));
+});
+test('both actions move the body and tool, loop cleanly, and keep all variants in frame',()=>{
+  let framesChecked=0;
+  for(const gender of GENDERS)for(const type of ['sword','pickaxe'])for(const style of TOOL_STYLES[type])for(const length of type==='sword'?[13,17]:[10,14]) {
+    const p=createPlayer('COPPER-005',gender);p.parts.hat.style='wizard';p.parts.hat.height=10;p.tools[type].style=style;p.tools[type].length=length;p.tools[type].guard=5;
+    const action=`${type}_swing`,frames=animationFrames(p,action);
+    for(const d of DIRECTIONS){assert.equal(digest(frames[0][d].pixels),digest(frames[7][d].pixels),'loop seam');assert.ok(new Set(frames.map(f=>digest(f[d].pixels))).size>=6,'visible motion in each view');}
+    for(const f of frames)for(const direction of DIRECTIONS){const image=f[direction];assert.equal(image.width,64);for(let n=0;n<64;n++)for(const i of [n,63*64+n,n*64,n*64+63])assert.equal(image.pixels[i*4+3],0,`${gender}/${type}/${style}/${length}/${direction} clipped`);framesChecked++;}
+    const start=buildModel(p,{action,frame:0}),hit=buildModel(p,{action,frame:5});assert.notDeepEqual(start.layers.body,hit.layers.body);assert.notDeepEqual(start.layers.tool,hit.layers.tool);
+  }
+  assert.equal(framesChecked,1152);
+});
+test('action atlas positions and pixels match the corresponding live frames',()=>{
+  const p=createPlayer('COPPER-005','female'),sheet=generateAnimationSheet(p,'pickaxe_swing'),frames=animationFrames(p,'pickaxe_swing'),meta=manifest(p).animations.pickaxe_swing;
+  const png=decodePNG(encodePNG(sheet));assert.equal(png.w,512);assert.equal(png.h,256);
+  for(const direction of DIRECTIONS)for(const frame of [0,3,5,7]){const rect=meta.frames[direction][frame],live=frames[frame][direction];for(let y=0;y<64;y++){const at=((rect.y+y)*512+rect.x)*4;assert.deepEqual(new Uint8Array(png.pixels.subarray(at,at+256)),new Uint8Array(live.pixels.subarray(y*256,(y+1)*256)));}}
+});
+test('left and right mean the direction the player faces on screen',()=>{
+  const model=buildModel(createPlayer());for(const layer of Object.values(model.layers))layer.fill(0);
+  // A marker in front of the face (+Z) must appear left of center when facing left.
+  model.layers.head[(24*64+6+32)*64+32]=6;
+  const centroid=direction=>{const frame=renderModel(model,direction);let total=0,n=0;for(let y=0;y<48;y++)for(let x=0;x<48;x++)if(frame.pixels[(y*48+x)*4+3]){total+=x;n++;}return total/n;};
+  assert.ok(centroid('left')<24);assert.ok(centroid('right')>24);
 });

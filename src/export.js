@@ -1,4 +1,4 @@
-import { SIZE, PARTS, DIRECTIONS, buildModel, renderModel, generateSheet, manifest } from './generator.js';
+import { SIZE, PARTS, RENDER_LAYERS, DIRECTIONS, buildModel, renderModel, generateSheet, generateAnimationSheet, toolSheet, manifest } from './generator.js';
 
 const encoder = new TextEncoder();
 const crcTable = Uint32Array.from({length:256},(_,n)=>{for(let k=0;k<8;k++) n=n&1?0xedb88320^(n>>>1):n>>>1;return n>>>0;});
@@ -33,12 +33,14 @@ export function encodeZIP(files) {
 export function exportBundle(player) {
   const meta=manifest(player),files={'player.png':encodePNG(generateSheet(player)), 'player.json':JSON.stringify(meta,null,2)};
   const model=buildModel(player),frames=DIRECTIONS.map(d=>renderModel(model,d));
-  for(const part of PARTS) {
+  for(const part of RENDER_LAYERS) {
     files[`parts/${part}.png`]=encodePNG(generateSheet(player,[part]));
-    const id=PARTS.indexOf(part)+1,width=SIZE*4,pixels=new Uint8ClampedArray(width*SIZE*4);
+    const id=RENDER_LAYERS.indexOf(part)+1,width=SIZE*4,pixels=new Uint8ClampedArray(width*SIZE*4);
     frames.forEach((frame,col)=>{for(let y=0;y<SIZE;y++)for(let x=0;x<SIZE;x++){const i=y*SIZE+x;if(frame.owners[i]===id)pixels.set(frame.pixels.subarray(i*4,i*4+4),(y*width+col*SIZE+x)*4);}});
     files[`layers/${part}.png`]=encodePNG({width,height:SIZE,pixels});
   }
-  files['README.txt']='AGENT TOWN / PLAYER ASSET\n\nAll PNGs are native resolution, transparent RGBA.\nFour columns: front, back, left, right. Each frame is 48 x 48 pixels.\nFeet anchor: (24, 43). Use nearest-neighbor scaling.\n\nplayer.png: complete character.\nparts/: complete isolated assets, using the same registration.\nlayers/: visible portions of each part; overlay these to reconstruct player.png exactly.\nTo swap parts, rerender the shared model for correct depth and occlusion.\nplayer.json: editable recipe, frame coordinates and version. Import into the workshop to recreate.\n';
+  for(const type of ['sword','pickaxe'])files[`tools/${type}.png`]=encodePNG(toolSheet(player.tools[type]));
+  for(const action of ['sword_swing','pickaxe_swing'])files[`animations/${action}.png`]=encodePNG(generateAnimationSheet(player,action));
+  files['README.txt']='AGENT TOWN / PLAYER ASSET\n\nAll PNGs are native resolution, transparent RGBA.\nFour columns: front, back, left, right. Each frame is 48 x 48 pixels.\nFeet anchor: (24, 43). Use nearest-neighbor scaling.\n\nplayer.png: complete standing character with selected equipment.\nparts/: complete isolated assets, using the same registration.\nlayers/: visible portions of each part; overlay these to reconstruct player.png exactly.\nTo swap parts, rerender the shared model for correct depth and occlusion.\ntools/: generated sword and pickaxe inventory sheets, four 48 x 48 frames.\nanimations/: eight 64 x 64 frames per row. Rows: front, back, left, right. Anchor: (32, 54). Playback: 8 fps, hit event at frame 5 (zero-based).\nplayer.json: editable recipe, gender, tool variants, animation events, frame coordinates and version. Import into the workshop to recreate.\n';
   return encodeZIP(files);
 }

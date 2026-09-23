@@ -1,56 +1,79 @@
 # Agent Town — Player Workshop
 
-The first building block of a retro, Dwarf Fortress-inspired world: a reproducible player object with **head, hat, and body**, rendered from the front, back, left, and right.
+A procedural, retro player asset generator for a Dwarf Fortress-inspired world. A player has **head, hat, and body**, gender, and generated equipment. One small voxel character produces consistent **front, back, left-facing, and right-facing** pixel sprites, including sword and pickaxe swings.
+
+![Sword and pickaxe animation previews](examples/action-preview.gif)
 
 ## Run
 
-Requires Node.js 20 or later. No dependencies or package install.
+Node.js 20 or later. No dependencies or package install.
 
 ```sh
 npm start       # http://127.0.0.1:4173
-npm test        # deterministic rendering and export checks
+npm test        # generator, animation, and export checks
 npm run build   # dist/player-workshop.html — open directly in a browser
 ```
 
-The standalone build works offline. The development page optionally loads Google Fonts; system fonts are the fallback.
+The standalone build is fully offline. The development page optionally loads Google Fonts; system fonts are the fallback.
 
-## The generator
+## Workshop
 
-This is a procedural generator, with no image service, AI model, or API key. It creates a small voxel model with parametric anatomy, facial hair, garments, headwear, and accessories. Four orthographic camera projections turn that **one model** into 48 × 48 pixel sprites. A feature is generated once in character space, so the feather, face, satchel, and rear hair remain on the correct side. An opaque palette and one-pixel silhouette keep every exported pixel sharp.
+- Select **Man, Woman, or Nonbinary**. Gender supplies a default head style and body proportions; every head style, outfit, and tool remains available to everyone.
+- Choose among six head styles, five hats (including none), four outfits, and five palettes. Hair, skin, dimensions, and details also vary with the seed.
+- Regenerate or lock individual character parts. Deliberate style edits still apply to locked parts. Skin tone is shared by head and hands; generation preserves it when either head or body is locked. Clothing colors remain fixed when hat or body is locked.
+- Forge **longswords, falchions, and rapiers**, or **crescent picks, prospector picks, and warpicks**. Variants change length, guard/head span, grip color, fittings, and gems. Choose iron, bronze, or obsidian materials.
+- Equip either tool, play a swing, pause, scrub any of its eight frames, and select 4, 8, or 12 fps preview speed. All four directional previews animate together.
+- Save and import a recipe to preserve the full edited player. A seed plus gender recreates the starting character; the recipe preserves subsequent edits and tool variants. Version 1 recipes migrate to version 2 automatically.
 
-The current visual vocabulary is intentionally compact: 4 facial-hair styles, 5 headwear styles (including none), 4 outfits, 5 clothing palettes, 5 skin tones, 6 hair colors, plus geometry/detail variations. This is the initial player asset system; world simulation and gameplay are not included.
+## How consistency works
 
-Use seeds for repeatable starting characters, select styles and palettes, reroll a single part, or lock parts when generating another player. Locks protect random generation; deliberate style/palette edits still apply. Clothing colors stay fixed during generation when hat or body is locked. Skin tone is shared by head and body and stays fixed when either is locked. Save a JSON recipe to preserve all edits: the original seed alone only reproduces the original generated character. Imports validate values before rendering and do not change lock settings.
+This is a local procedural generator: no image service, AI model, or API key. Parametric voxel geometry defines the face, hair, clothing, accessories, sword, and pickaxe. Orthographic projections sample this shared model, with a small opaque palette and one-pixel silhouette. Features stay attached to the same physical side in every view.
 
-## Asset contract
+Animations pose a shared arm rig. The sword follows the right hand; the pickaxe uses a two-handed grip. Anticipation, wind-up, strike, follow-through, and recovery include upper-body movement. Tool geometry is inverse-sampled under a rigid transform, so rotating a blade does not scatter its voxels. Every generated tool variant uses this same rig.
 
-Export produces a ZIP with these files:
+This is the player and asset system. Combat damage, terrain mining, navigation, and world simulation are not implemented. The animation metadata includes hit events for those future systems.
 
-| Path | Content |
+## Export contract
+
+Every export includes **both** swing animations, regardless of which tool is currently equipped.
+
+| File | Content |
 | --- | --- |
-| `player.png` | Transparent 192 × 48 sheet: front, back, left, right |
-| `parts/head.png`, `parts/hat.png`, `parts/body.png` | Complete isolated parts in the same frame registration |
-| `layers/head.png`, `layers/hat.png`, `layers/body.png` | Visible pixels of each part, including its outline, reconstructing this exact player |
-| `player.json` | Versioned editable recipe and frame metadata |
+| `player.png` | Standing character and current equipment: 192 × 48, four columns |
+| `parts/{head,hat,body,tool}.png` | Complete isolated components, same standing registration |
+| `layers/{head,hat,body,tool}.png` | Visible component pixels, exactly reconstructing `player.png` |
+| `tools/{sword,pickaxe}.png` | Four-view inventory sheets for each generated tool |
+| `animations/sword_swing.png` | Eight action frames × four directions, 512 × 256 |
+| `animations/pickaxe_swing.png` | Eight action frames × four directions, 512 × 256 |
+| `player.json` | Versioned player/tool recipes, atlas rectangles, anchors, timing, hit events |
 | `README.txt` | Import and compositing notes |
 
-Every frame has a 48 × 48 registration box and a foot anchor at `(24, 43)`. Scale with nearest-neighbor filtering. The visible layers reconstruct the exported player pixel for pixel. When swapping parts, rerender the shared model: isolated complete parts can occlude each other differently in each direction, so a fixed 2D layer order cannot replace depth testing.
+Standing frames are **48 × 48**, foot anchor **(24, 43)**. Action frames are **64 × 64**, foot anchor **(32, 54)**, so the full tool arc fits without clipping. Place each frame using its foot anchor to keep the character planted when changing actions. Tool inventory frames have a projected grip anchor of **(24, 29)**.
+
+Standing and inventory sheets use four columns: **front, back, left, right**. Action atlases use those directions as rows and time as eight columns. Playback defaults to **8 fps**. Frame **5**, zero-based, carries `sword_hit` or `pickaxe_hit`. First and last frames match for a clean loop. The preview speed control does not change the exported default timing.
+
+All PNGs are transparent, native-resolution RGBA. Scale with nearest-neighbor filtering. Overlay `layers/` to reconstruct this particular standing character pixel for pixel. Rerender the shared model when swapping parts or tools: isolated components need depth testing in each direction.
 
 ## Use in a game
 
 ```js
-import { createPlayer, renderPlayer, generatePart } from './src/generator.js';
+import { createPlayer, generateTool, renderPlayer, generateAnimationSheet } from './src/generator.js';
 
-const player = createPlayer('COPPER-005');
-player.parts.hat = generatePart('hat', 'MY-NEW-HAT');
-const frame = renderPlayer(player, 'left');
-ctx.putImageData(new ImageData(frame.pixels, frame.width, frame.height), 0, 0);
+const player = createPlayer('COPPER-005', 'female');
+player.parts.head.style = 'ponytail';
+player.tools.pickaxe = generateTool('pickaxe', 'MY-PICK-91');
+player.equipment = 'pickaxe';
+
+const standing = renderPlayer(player, 'left');
+const striking = renderPlayer(player, 'left', undefined, {
+  action: 'pickaxe_swing', frame: 5
+});
+const atlas = generateAnimationSheet(player, 'pickaxe_swing');
+ctx.putImageData(new ImageData(striking.pixels, striking.width, striking.height), 0, 0);
 ```
 
-`generator.js` is independent of the DOM and canvas. Cache generated frames in the game; there is no need to rerender every tick. The generator also accepts a four-phase pose index for future walking integration; the current workshop and exports use a standing pose.
+The generator, rig, PNG writer, and ZIP writer have no DOM or canvas dependencies. Cache rendered frames in a game; do not rerender the model every tick. `src/rig.js` defines action poses and `src/generator.js` owns the procedural geometry and projections.
 
 ## Verification
 
-The test suite checks reproducibility, recipe validation, independent parts, every combination of the current style families (320 directional renders) for clipping and binary alpha, lossless PNG decoding with Node's zlib, ZIP checksums, manifest paths, and exact reconstruction from visible layers. Browser checks cover style selection, directions, palette selection, locks, reroll, seed generation, responsive layout, and export actions.
-
-The sprite art, geometry rules, PNG writer, and ZIP writer are generated locally from this repository's code. Nothing is uploaded by the workshop.
+Tests cover repeatable recipes and pixels; independent components; invalid recipes and version migration; all 480 standing style/direction combinations; 1,152 action frames across genders, tool shapes, extreme lengths, and directions; clean loop seams; moving bodies and tools; seed diversity; left/right orientation; exact live-frame/atlas parity; independent zlib PNG decoding; ZIP checksums; manifest paths; and pixel-exact layer reconstruction. Browser checks exercise gender, equipment, styles, animation playback and scrubbing, recipe import, downloads, and responsive layout.

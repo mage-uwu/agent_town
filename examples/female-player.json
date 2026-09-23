@@ -5,14 +5,14 @@
     "schemaVersion": 2,
     "type": "player",
     "seed": "COPPER-005",
-    "gender": "male",
-    "equipment": "sword",
+    "gender": "female",
+    "equipment": "pickaxe",
     "tools": {
       "sword": {
         "type": "sword",
         "seed": "COPPER-005",
-        "style": "longsword",
-        "material": "iron",
+        "style": "rapier",
+        "material": "bronze",
         "length": 13,
         "guard": 5,
         "grip": "#473c4c",
@@ -29,13 +29,13 @@
         "gem": "#6ba4a5"
       }
     },
-    "name": "Orrin Stonebriar",
-    "palette": "moss",
+    "name": "Hilda Stonebriar",
+    "palette": "tide",
     "skin": "#f0ceb0",
     "parts": {
       "head": {
         "seed": "COPPER-005",
-        "style": "braided",
+        "style": "ponytail",
         "hair": "#5b3c2f",
         "width": 6,
         "brow": 0
@@ -128,8 +128,8 @@
       "recipe": {
         "type": "sword",
         "seed": "COPPER-005",
-        "style": "longsword",
-        "material": "iron",
+        "style": "rapier",
+        "material": "bronze",
         "length": 13,
         "guard": 5,
         "grip": "#473c4c",
