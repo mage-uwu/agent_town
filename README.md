@@ -1,6 +1,6 @@
 # Agent Town — Player Workshop
 
-A procedural, retro player asset generator for a Dwarf Fortress-inspired world. A player has **head, hat, and body**, gender, and generated equipment. One small voxel character produces consistent **front, back, left-facing, and right-facing** pixel sprites, including sword and pickaxe swings.
+A procedural, retro player asset generator for a Dwarf Fortress-inspired world. A player has **head, hat, and body**, gender, faction, class, and generated equipment. One small voxel character produces consistent **front, back, left-facing, and right-facing** pixel sprites, including sword and pickaxe swings.
 
 ![Sword and pickaxe animation previews](examples/action-preview.gif)
 
@@ -19,11 +19,29 @@ The standalone build is fully offline. The development page optionally loads Goo
 ## Workshop
 
 - Select **Man, Woman, or Nonbinary**. Gender supplies a default head style and body proportions; every head style, outfit, and tool remains available to everyone.
-- Choose among six head styles, five hats (including none), four outfits, and five palettes. Hair, skin, dimensions, and details also vary with the seed.
+- Choose among six head styles, six hats (including none), four outfits, and five palettes. Hair, skin, dimensions, and details also vary with the seed.
 - Regenerate or lock individual character parts. Deliberate style edits still apply to locked parts. Skin tone is shared by head and hands; generation preserves it when either head or body is locked. Clothing colors remain fixed when hat or body is locked.
 - Forge **longswords, falchions, and rapiers**, or **crescent picks, prospector picks, and warpicks**. Variants change length, guard/head span, grip color, fittings, and gems. Choose iron, bronze, or obsidian materials.
 - Equip either tool, play a swing, pause, scrub any of its eight frames, and select 4, 8, or 12 fps preview speed. All four directional previews animate together.
-- Save and import a recipe to preserve the full edited player. A seed plus gender recreates the starting character; the recipe preserves subsequent edits and tool variants. Version 1 recipes migrate to version 2 automatically.
+- Save and import a recipe to preserve the full edited player. A seed plus gender recreates the starting character; the recipe preserves subsequent edits and tool variants. Version 1 and 2 recipes migrate to version 3 automatically.
+
+## Factions and classes
+
+![Five factions and four class silhouettes](examples/faction-class-preview.png)
+
+Choose a faction to share its clothing, headwear, trim, leather, and metal palette with every other member. The Mossbound use moss and copper; the Emberguard ember and iron; the Tidewatch blue and silver; the Violet Coven plum and gold; and the Golden Hearth ochre and earth. Skin, hair, and generated weapon materials remain individual. Unaffiliated characters can use any personal palette.
+
+The palette is resolved from the faction definition during rendering, and imported recipes with conflicting faction colors are rejected. Random generation and class changes keep the selected faction. The **Under one banner** lineup previews all four class outfits in the current colors.
+
+Class presets are **Witch** (broad pointed hat and coat), **Gnome** (pointed cap, broad head, tunic, and pickaxe), **Knight** (helmet, armor, colored tabard, and sword), and **Townsfolk** (everyday hats, tunics, or aprons). These are visual archetypes, not gameplay stats or a species system. A class preset reapplies its outfit, including locked parts, as an explicit outfit edit; subsequent per-part regeneration respects the class's hat/body styles. Individual style edits are still allowed without changing the class identity. Existing generated tool variants survive class changes.
+
+Recipes now use schema version 3 and include `faction` and `classId`; version 1 and 2 imports migrate to Unaffiliated / Custom so their personal colors and equipment are retained. Generation accepts `{ faction, classId }` as its third argument. `applyClass(player, classId)` and `setFaction(player, faction)` return new player objects.
+
+```js
+const knight = createPlayer('GUARD-17', 'female', {
+  faction: 'emberguard', classId: 'knight'
+});
+```
 
 ## How consistency works
 
@@ -76,4 +94,4 @@ The generator, rig, PNG writer, and ZIP writer have no DOM or canvas dependencie
 
 ## Verification
 
-Tests cover repeatable recipes and pixels; independent components; invalid recipes and version migration; all 480 standing style/direction combinations; 1,152 action frames across genders, tool shapes, extreme lengths, and directions; clean loop seams; moving bodies and tools; seed diversity; left/right orientation; exact live-frame/atlas parity; independent zlib PNG decoding; ZIP checksums; manifest paths; and pixel-exact layer reconstruction. Browser checks exercise gender, equipment, styles, animation playback and scrubbing, recipe import, downloads, and responsive layout.
+Tests cover repeatable recipes and pixels; independent components; invalid recipes and version migration; all 576 standing style/direction combinations; 1,152 action frames across genders, tool shapes, extreme lengths, and directions; clean loop seams; moving bodies and tools; seed diversity; all class/gender/action combinations; faction palette invariants; class defaults and migration; left/right orientation; exact live-frame/atlas parity; independent zlib PNG decoding; ZIP checksums; manifest paths; and pixel-exact layer reconstruction. Browser checks exercise gender, equipment, styles, animation playback and scrubbing, recipe import, downloads, and responsive layout.

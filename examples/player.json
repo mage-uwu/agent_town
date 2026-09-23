@@ -1,18 +1,20 @@
 {
   "generator": "agent-town/player",
-  "generatorVersion": 2,
+  "generatorVersion": 3,
   "player": {
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "type": "player",
     "seed": "COPPER-005",
     "gender": "male",
+    "faction": "emberguard",
+    "classId": "knight",
     "equipment": "sword",
     "tools": {
       "sword": {
         "type": "sword",
         "seed": "COPPER-005",
-        "style": "longsword",
-        "material": "iron",
+        "style": "rapier",
+        "material": "bronze",
         "length": 13,
         "guard": 5,
         "grip": "#473c4c",
@@ -30,7 +32,7 @@
       }
     },
     "name": "Orrin Stonebriar",
-    "palette": "moss",
+    "palette": "ember",
     "skin": "#f0ceb0",
     "parts": {
       "head": {
@@ -42,17 +44,33 @@
       },
       "hat": {
         "seed": "COPPER-005",
-        "style": "ranger",
+        "style": "helmet",
         "height": 10,
         "feather": true
       },
       "body": {
         "seed": "COPPER-005",
-        "style": "tunic",
+        "style": "armor",
         "width": 7,
         "buttons": true
       }
     }
+  },
+  "faction": {
+    "id": "emberguard",
+    "name": "The Emberguard",
+    "palette": {
+      "name": "Ember & iron",
+      "cloth": "#a24e40",
+      "hat": "#794037",
+      "trim": "#e3b66f",
+      "leather": "#533d38",
+      "metal": "#919899"
+    }
+  },
+  "class": {
+    "id": "knight",
+    "name": "Knight"
   },
   "image": "player.png",
   "size": {
@@ -128,8 +146,8 @@
       "recipe": {
         "type": "sword",
         "seed": "COPPER-005",
-        "style": "longsword",
-        "material": "iron",
+        "style": "rapier",
+        "material": "bronze",
         "length": 13,
         "guard": 5,
         "grip": "#473c4c",

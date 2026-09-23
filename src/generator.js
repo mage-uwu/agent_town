@@ -1,7 +1,8 @@
+import { FACTIONS, CLASSES } from './identities.js';
 import { ACTIONS, ACTION_FRAMES, ACTION_FPS, ACTION_SIZE, ACTION_ANCHOR, unit, cross, actionTool, rigPose } from './rig.js';
 
 /** Pure, dependency-free player generator. Coordinates: +Y up, +Z face, +X right. */
-export const VERSION = 2;
+export const VERSION = 3;
 export const SIZE = 48;
 export const DIRECTIONS = ['front', 'back', 'left', 'right'];
 export const PARTS = ['body', 'head', 'hat'];
@@ -11,7 +12,7 @@ export const TOOL_STYLES = {sword:['longsword','falchion','rapier'],pickaxe:['cr
 export const TOOL_MATERIALS = {iron:{name:'Iron',base:'#9aaab3',edge:'#dae6dc'},bronze:{name:'Bronze',base:'#b4854e',edge:'#f3d39a'},obsidian:{name:'Obsidian',base:'#51465f',edge:'#a99cc8'}};
 export const STYLES = {
   head: ['braided', 'full', 'trimmed', 'clean', 'bob', 'ponytail'],
-  hat: ['ranger', 'wizard', 'helmet', 'hood', 'none'],
+  hat: ['ranger', 'wizard', 'helmet', 'hood', 'none', 'cap'],
   body: ['tunic', 'coat', 'armor', 'apron'],
 };
 export const PALETTES = {
@@ -34,11 +35,13 @@ function random(seed) {
   return () => { a += 0x6D2B79F5; let t = a; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 }
 function pick(rng, values) { return values[Math.floor(rng() * values.length)]; }
-export function generatePart(part, seed, gender = 'male') {
+export function generatePart(part, seed, gender = 'male', classId = 'custom') {
   if (!PARTS.includes(part)) throw new Error('Unknown player part');
   const rng = random(`${part}:${seed}`);
   const headChoices=gender==='female'?['clean','bob','ponytail']:gender==='nonbinary'?['clean','trimmed','bob','ponytail']:['braided','full','trimmed','clean'];
-  const style = pick(rng, part==='head'?headChoices:STYLES[part]);
+  if(!Object.hasOwn(CLASSES,classId))throw new Error('Unknown class');
+  const choices=CLASSES[classId][part]??(part==='head'?headChoices:STYLES[part]);
+  const style = pick(rng, choices);
   if (part === 'head') return { seed: String(seed), style, hair: pick(rng, HAIRS), width: pick(rng, [5, 6]), brow: pick(rng, [0, 1]) };
   if (part === 'hat') return { seed: String(seed), style, height: pick(rng, [8, 9, 10]), feather: rng() > 0.35 };
   return { seed: String(seed), style, width: pick(rng, [6, 7]), buttons: rng() > 0.45 };
@@ -48,19 +51,23 @@ export function generateTool(type, seed) {
   const rng=random(`${type}:${seed}`);
   return {type,seed:String(seed),style:pick(rng,TOOL_STYLES[type]),material:pick(rng,Object.keys(TOOL_MATERIALS)),length:pick(rng,type==='sword'?[13,15,17]:[10,12,14]),guard:pick(rng,[3,4,5]),grip:pick(rng,['#684431','#473c4c','#794743']),gem:pick(rng,['#b75c47','#6ba4a5','#c8ad5d'])};
 }
-export function createPlayer(seed = 'COPPER-005', gender = 'male') {
+export function createPlayer(seed = 'COPPER-005', gender = 'male', options = {}) {
   if(!GENDERS.includes(gender))throw new Error('Unknown gender');
   const rng = random(seed), names=gender==='female'?['Bryn','Hilda','Moss','Wren','Ada','Fenna','Thora','Merrin']:gender==='nonbinary'?['Bram','Ash','Moss','Wren','Ember','Flint','Rowan','Merrin']:['Bram','Orrin','Moss','Wren','Dorin','Flint','Torren','Merrin'];
-  return { schemaVersion: VERSION, type: 'player', seed: String(seed), gender, name: pick(rng,names) + ' ' + pick(rng, ['Copperbrook', 'Ironfern', 'Ashvale', 'Stonebriar', 'Oakmantle', 'Emberfoot']), palette: pick(rng, Object.keys(PALETTES)), skin: SKINS[hash(seed) % SKINS.length], parts: Object.fromEntries(PARTS.map(part => [part, generatePart(part, seed, gender)])), equipment:'none', tools:{sword:generateTool('sword',seed),pickaxe:generateTool('pickaxe',seed)} };
+  const player = { schemaVersion: VERSION, type: 'player', seed: String(seed), gender, faction:'unaffiliated', classId:'custom', name: pick(rng,names) + ' ' + pick(rng, ['Copperbrook', 'Ironfern', 'Ashvale', 'Stonebriar', 'Oakmantle', 'Emberfoot']), palette: pick(rng, Object.keys(PALETTES)), skin: SKINS[hash(seed) % SKINS.length], parts: Object.fromEntries(PARTS.map(part => [part, generatePart(part, seed, gender)])), equipment:'none', tools:{sword:generateTool('sword',seed),pickaxe:generateTool('pickaxe',seed)} };
+  return setFaction(applyClass(player,options.classId??'custom'),options.faction??'unaffiliated');
 }
 export function validatePlayer(input) {
-  if(input?.schemaVersion===1)input={...input,schemaVersion:VERSION,gender:'male',equipment:'none',tools:{sword:generateTool('sword',input.seed),pickaxe:generateTool('pickaxe',input.seed)}};
-  if (!input || input.schemaVersion !== VERSION || input.type !== 'player' || !PALETTES[input.palette]) throw new Error('Not a supported Agent Town player recipe.');
+  if(input?.schemaVersion===1)input={...input,schemaVersion:2,gender:'male',equipment:'none',tools:{sword:generateTool('sword',input.seed),pickaxe:generateTool('pickaxe',input.seed)}};
+  if(input?.schemaVersion===2)input={...input,schemaVersion:VERSION,faction:'unaffiliated',classId:'custom'};
+  if(!input || !Object.hasOwn(FACTIONS,input.faction) || !Object.hasOwn(CLASSES,input.classId))throw new Error('Invalid faction or class.');
+  if (!input || input.schemaVersion !== VERSION || input.type !== 'player' || !Object.hasOwn(PALETTES,input.palette)) throw new Error('Not a supported Agent Town player recipe.');
   if (typeof input.name !== 'string' || input.name.length > 100 || typeof input.seed !== 'string' || input.seed.length > 100) throw new Error('Invalid name or seed.');
   for (const part of PARTS) {
     const p = input.parts?.[part];
     if (!p || !STYLES[part].includes(p.style) || typeof p.seed !== 'string' || p.seed.length > 100) throw new Error(`Invalid ${part} recipe.`);
   }
+  if(FACTIONS[input.faction].palette && input.palette!==FACTIONS[input.faction].palette)throw new Error('Faction members must use their shared palette.');
   const {head, hat, body} = input.parts;
   if (!SKINS.includes(input.skin) || !HAIRS.includes(head.hair) || ![5, 6].includes(head.width) || ![0, 1].includes(head.brow)) throw new Error('Invalid head recipe.');
   if (![8, 9, 10].includes(hat.height) || typeof hat.feather !== 'boolean') throw new Error('Invalid hat recipe.');
@@ -73,8 +80,26 @@ export function validatePlayer(input) {
     tools[type]={type,seed:t.seed,style:t.style,material:t.material,length:t.length,guard:t.guard,grip:t.grip,gem:t.gem};
   }
   // Copy only public recipe fields; imported metadata cannot affect the renderer.
-  return { schemaVersion: VERSION, type: 'player', seed: input.seed, gender:input.gender, equipment:input.equipment, tools, name: input.name, palette: input.palette, skin: input.skin, parts: { head: {seed:head.seed, style:head.style, hair:head.hair, width:head.width, brow:head.brow}, hat: {seed:hat.seed, style:hat.style, height:hat.height, feather:hat.feather}, body: {seed:body.seed, style:body.style, width:body.width, buttons:body.buttons} } };
+  return { schemaVersion: VERSION, type: 'player', seed: input.seed, gender:input.gender, faction:input.faction, classId:input.classId, equipment:input.equipment, tools, name: input.name, palette: input.palette, skin: input.skin, parts: { head: {seed:head.seed, style:head.style, hair:head.hair, width:head.width, brow:head.brow}, hat: {seed:hat.seed, style:hat.style, height:hat.height, feather:hat.feather}, body: {seed:body.seed, style:body.style, width:body.width, buttons:body.buttons} } };
 }
+
+export function setFaction(player, faction) {
+  if(!Object.hasOwn(FACTIONS,faction))throw new Error('Unknown faction');
+  const next=structuredClone(player);next.faction=faction;
+  if(FACTIONS[faction].palette)next.palette=FACTIONS[faction].palette;
+  return next;
+}
+export function applyClass(player, classId) {
+  if(!Object.hasOwn(CLASSES,classId))throw new Error('Unknown class');
+  const next=structuredClone(player);next.classId=classId;
+  if(classId==='custom')return next;
+  for(const part of PARTS)next.parts[part]=generatePart(part,player.parts[part].seed,player.gender,classId);
+  if(classId==='witch') {next.parts.head.style=player.gender==='male'?'trimmed':'ponytail';next.parts.hat.height=10;}
+  if(classId==='gnome') {next.parts.head.style=player.gender==='male'?'full':'bob';next.parts.head.width=6;next.parts.hat.height=10;next.parts.body.width=7;}
+  next.equipment=CLASSES[classId].equipment;
+  return next;
+}
+export function playerPalette(player) {return PALETTES[FACTIONS[player.faction]?.palette??player.palette];}
 
 const N = 64, OFFSET = 32;
 const index = (x, y, z) => (y * N + z + OFFSET) * N + x + OFFSET;
@@ -129,7 +154,7 @@ export function buildModel(player, options = {}) {
   const action=options.action??'idle',frame=options.frame??0;
   if(!ACTIONS.includes(action))throw new Error('Unknown action');
   const equipped=actionTool(action,options.equipment??player.equipment), tool=equipped==='none'?null:player.tools[equipped];
-  const { head, hat, body } = player.parts, palette = PALETTES[player.palette];
+  const { head, hat, body } = player.parts, palette = playerPalette(player);
   const layers = Object.fromEntries(RENDER_LAYERS.map(p => [p, new Uint8Array(N ** 3)]));
   const colors = [null, palette.cloth, palette.hat, palette.trim, palette.leather, palette.metal, player.skin, head.hair, '#24252c', '#e8dcad', '#b05c41', ...(tool?toolColors(tool):['#9aaab3','#dae6dc','#684431','#c6a767','#6ba4a5'])];
   let layer;
@@ -156,7 +181,7 @@ export function buildModel(player, options = {}) {
   if(player.gender==='female') {box(-w,12,-4,-w+1,17,5,0);box(w-1,12,-4,w,17,5,0);} 
   if(body.style === 'coat') { box(-w,6,-3,-1,12,4,1); box(1,6,-3,w,12,4,1); box(-1,10,4,1,22,5,3); }
   if(body.style === 'apron') { box(-4,7,4,4,18,5,4); box(-2,17,4,2,22,5,4); box(-4,10,5,4,12,6,3); box(-w,14,-5,w,15,-4,4); }
-  if(body.style === 'armor') { box(-w,16,4,w,17,5,3); box(-1,12,4,1,21,5,3); box(-w,10,-4,w,11,4,5); }
+  if(body.style === 'armor') { box(-w,16,4,w,17,5,3); box(-1,12,4,1,21,5,3); box(-w,10,-4,w,11,4,5); box(-3,13,5,3,21,6,1); box(-3,13,-5,3,21,-4,1); }
   box(-w,11,-4,w,13,5,4); box(-2,11,5,2,14,6,3); box(-1,12,6,1,13,7,4);
   for(const side of [-1,1]) {
     const x = side*(w+1), swing = -stride*side;
@@ -211,9 +236,12 @@ export function buildModel(player, options = {}) {
     ellipsoid(0,32,0,11,1.2,7,2);
     for(let y=32;y<30+hat.height;y++) { const r = Math.max(1,(30+hat.height-y)*.63); ellipsoid(-(y-32)*.18,y,0,r,.8,r*.8,2); }
     box(-5,33,3,5,35,5,3); box(1,37,3,3,39,4,3);
+  } else if(hat.style==='cap') {
+    ellipsoid(0,32,0,7.5,1.3,5.5,3);
+    for(let y=32;y<30+hat.height;y++){const r=Math.max(1,(31+hat.height-y)*.72);ellipsoid((y-32)*.1,y,0,r,.8,r*.8,2);}
   } else if(hat.style==='helmet') {
     ellipsoid(0,32,0,7.8,5.5,6.2,5); box(-7,30,4,7,32,6,3);
-    box(-1,32,5,1,35,7,3); box(-1,35,-4,1,38,4,3);
+    box(-1,32,5,1,35,7,3); box(-1,35,-4,1,38,4,1);
     for(const s of [-1,1]) { box(s<0?-8:6,26,-3,s<0?-6:8,32,2,5); box(s<0?-8:6,28,1,s<0?-6:8,30,3,3); }
   } else if(hat.style==='hood') {
     ellipsoid(0,31,-1,8,6.8,6,2);
@@ -307,6 +335,7 @@ export function manifest(player) {
   const registered=part=>({image:`parts/${part}.png`,visibleLayer:`layers/${part}.png`,sameRegistration:true});
   return {
     generator:'agent-town/player',generatorVersion:VERSION,player:validatePlayer(player),
+    faction:{id:player.faction,name:FACTIONS[player.faction].name,palette:playerPalette(player)},class:{id:player.classId,name:CLASSES[player.classId].name},
     image:'player.png',size:{w:192,h:48},frameSize:{w:48,h:48},alpha:true,anchor:{x:24,y:43},directionOrder:DIRECTIONS,
     frames:Object.fromEntries(DIRECTIONS.map((dir,i)=>[dir,{x:i*48,y:0,w:48,h:48}])),
     parts:Object.fromEntries(PARTS.map(p=>[p,registered(p)])),equipmentLayer:registered('tool'),

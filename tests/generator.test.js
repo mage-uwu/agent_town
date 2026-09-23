@@ -1,8 +1,9 @@
+import {FACTIONS,CLASSES} from '../src/identities.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {inflateSync} from 'node:zlib';
 import {createHash} from 'node:crypto';
-import {createPlayer,generatePart,buildModel,renderModel,generateSheet,validatePlayer,manifest,PARTS,DIRECTIONS,STYLES,RENDER_LAYERS,GENDERS,TOOL_STYLES,generateTool,animationFrames,generateAnimationSheet,toolSheet} from '../src/generator.js';
+import {createPlayer,generatePart,buildModel,renderModel,generateSheet,validatePlayer,manifest,PARTS,DIRECTIONS,STYLES,RENDER_LAYERS,GENDERS,TOOL_STYLES,generateTool,applyClass,setFaction,playerPalette,animationFrames,generateAnimationSheet,toolSheet} from '../src/generator.js';
 import {encodePNG,exportBundle,crc32} from '../src/export.js';
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 
@@ -41,7 +42,7 @@ test('every style combination has four distinct, unclipped, binary-alpha views',
     }
     assert.equal(new Set(hashes).size,4);
   }
-  assert.equal(checked,480);
+  assert.equal(checked,576);
 });
 test('no hat produces a fully transparent isolated hat sheet',()=>{
   const p=createPlayer();p.parts.hat.style='none';assert.ok(generateSheet(p,['hat']).pixels.every(x=>x===0));
@@ -69,7 +70,7 @@ test('ZIP has valid checksums, exact layer reconstruction, and resolvable manife
 
 test('gender recipes are repeatable and allow every head style',()=>{
   for(const gender of GENDERS){const p=createPlayer('COPPER-005',gender);assert.equal(validatePlayer(p).gender,gender);assert.deepEqual(p,createPlayer('COPPER-005',gender));for(const style of STYLES.head){p.parts.head.style=style;assert.equal(validatePlayer(p).parts.head.style,style);}}
-  const old=createPlayer('OLD');delete old.gender;delete old.equipment;delete old.tools;old.schemaVersion=1;const migrated=validatePlayer(old);assert.equal(migrated.schemaVersion,2);assert.equal(migrated.gender,'male');assert.ok(migrated.tools.pickaxe);
+  const old=createPlayer('OLD');delete old.gender;delete old.equipment;delete old.tools;old.schemaVersion=1;const migrated=validatePlayer(old);assert.equal(migrated.schemaVersion,3);assert.equal(migrated.gender,'male');assert.ok(migrated.tools.pickaxe);
 });
 test('tools have repeatable geometry and real seed diversity',()=>{
   for(const type of ['sword','pickaxe']) {
@@ -103,4 +104,38 @@ test('left and right mean the direction the player faces on screen',()=>{
   model.layers.head[(24*64+6+32)*64+32]=6;
   const centroid=direction=>{const frame=renderModel(model,direction);let total=0,n=0;for(let y=0;y<48;y++)for(let x=0;x<48;x++)if(frame.pixels[(y*48+x)*4+3]){total+=x;n++;}return total/n;};
   assert.ok(centroid('left')<24);assert.ok(centroid('right')>24);
+});
+
+
+test('every faction shares its palette across seeds, genders, and classes',()=>{
+  for(const [faction,definition] of Object.entries(FACTIONS))if(definition.palette) {
+    let colors;
+    for(const gender of GENDERS)for(const classId of ['witch','gnome','knight','townsfolk']){
+      const p=createPlayer(`FACTION-${gender}-${classId}`,gender,{classId,faction});assert.equal(p.palette,definition.palette);assert.equal(validatePlayer(p).faction,faction);
+      const current=buildModel(p).colors.slice(1,6);if(colors)assert.deepEqual(current,colors);else colors=current;
+      assert.deepEqual(manifest(p).faction.palette,playerPalette(p));
+    }
+  }
+  const p=createPlayer('ONE','female',{classId:'knight',faction:'mossbound'}),other=setFaction(p,'violet_coven');
+  assert.equal(other.classId,'knight');assert.deepEqual(other.parts,p.parts);assert.deepEqual(other.tools,p.tools);
+  for(const layer of RENDER_LAYERS)assert.deepEqual(buildModel(p).layers[layer],buildModel(other).layers[layer]);
+  assert.notEqual(digest(generateSheet(p).pixels),digest(generateSheet(other).pixels));
+  const bad=structuredClone(p);bad.palette='plum';assert.throws(()=>validatePlayer(bad),/shared palette/);
+  assert.throws(()=>validatePlayer({...p,faction:'constructor'}));assert.throws(()=>validatePlayer({...p,classId:'missing'}));
+});
+test('class presets are distinct and do not erase faction or generated tool variants',()=>{
+  const original=createPlayer('CLASS','female',{faction:'tidewatch'}),hashes=[];
+  for(const id of ['witch','gnome','knight','townsfolk']){
+    const p=applyClass(original,id);assert.equal(p.classId,id);assert.equal(p.faction,original.faction);assert.equal(p.palette,original.palette);assert.deepEqual(p.tools,original.tools);assert.equal(p.equipment,CLASSES[id].equipment);assert.ok(CLASSES[id].hat.includes(p.parts.hat.style));assert.ok(CLASSES[id].body.includes(p.parts.body.style));hashes.push(digest(generateSheet(p).pixels));
+    assert.deepEqual(p,createPlayer('CLASS','female',{classId:id,faction:'tidewatch'}));
+    assert.equal(validatePlayer(JSON.parse(JSON.stringify(manifest(p).player))).classId,id);
+  }
+  assert.equal(new Set(hashes).size,4);assert.equal(original.classId,'custom');
+  const old=createPlayer('LEGACY');old.schemaVersion=2;delete old.classId;delete old.faction;const migrated=validatePlayer(old);assert.equal(migrated.faction,'unaffiliated');assert.equal(migrated.classId,'custom');assert.deepEqual(migrated.tools,old.tools);
+});
+test('each class supports both swing animations without clipping in any view',()=>{
+  for(const classId of ['witch','gnome','knight','townsfolk'])for(const gender of GENDERS)for(const action of ['sword_swing','pickaxe_swing']){
+    const p=createPlayer('CLASS-ACTION',gender,{classId,faction:'emberguard'}),frames=animationFrames(p,action);
+    for(const frame of frames)for(const d of DIRECTIONS){const image=frame[d];for(let n=0;n<64;n++)for(const i of [n,63*64+n,n*64,n*64+63])assert.equal(image.pixels[i*4+3],0,`${classId}/${gender}/${action}/${d} clipped`);}
+  }
 });

@@ -1,0 +1,1188 @@
+{
+  "factions": {
+    "unaffiliated": {
+      "name": "Unaffiliated",
+      "palette": null,
+      "description": "An independent soul, in their own colors."
+    },
+    "mossbound": {
+      "name": "The Mossbound",
+      "palette": "moss",
+      "description": "Forest green, weathered copper, and woodland craft."
+    },
+    "emberguard": {
+      "name": "The Emberguard",
+      "palette": "ember",
+      "description": "Ember red and iron, from the mountain forges."
+    },
+    "tidewatch": {
+      "name": "The Tidewatch",
+      "palette": "tide",
+      "description": "Deep blue and silver, under a coastal banner."
+    },
+    "violet_coven": {
+      "name": "The Violet Coven",
+      "palette": "plum",
+      "description": "Plum and old gold, keepers of quiet mysteries."
+    },
+    "golden_hearth": {
+      "name": "The Golden Hearth",
+      "palette": "ochre",
+      "description": "Harvest ochre and warm earth, a home for every trade."
+    }
+  },
+  "classes": {
+    "custom": {
+      "name": "Custom",
+      "description": "Your own combination of parts and equipment."
+    },
+    "witch": {
+      "name": "Witch",
+      "description": "A broad pointed hat, a long coat, and a curious mind.",
+      "hat": [
+        "wizard"
+      ],
+      "body": [
+        "coat"
+      ],
+      "equipment": "none"
+    },
+    "gnome": {
+      "name": "Gnome",
+      "description": "A tall cap, a sturdy tunic, and a trusty mining pick.",
+      "hat": [
+        "cap"
+      ],
+      "body": [
+        "tunic"
+      ],
+      "equipment": "pickaxe"
+    },
+    "knight": {
+      "name": "Knight",
+      "description": "A crested helm, plate armor, and a faction-colored tabard.",
+      "hat": [
+        "helmet"
+      ],
+      "body": [
+        "armor"
+      ],
+      "equipment": "sword"
+    },
+    "townsfolk": {
+      "name": "Townsfolk",
+      "description": "Aprons, everyday tunics, and familiar faces.",
+      "hat": [
+        "none",
+        "ranger"
+      ],
+      "body": [
+        "apron",
+        "tunic"
+      ],
+      "equipment": "none"
+    }
+  },
+  "players": [
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "female",
+      "faction": "mossbound",
+      "classId": "witch",
+      "name": "Hilda Stonebriar",
+      "palette": "moss",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "coat",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "ponytail",
+          "hair": "#5b3c2f",
+          "width": 5,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "wizard",
+          "height": 10,
+          "feather": true
+        }
+      },
+      "equipment": "none",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "male",
+      "faction": "mossbound",
+      "classId": "gnome",
+      "name": "Orrin Stonebriar",
+      "palette": "moss",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "tunic",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "full",
+          "hair": "#5b3c2f",
+          "width": 6,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "cap",
+          "height": 10,
+          "feather": true
+        }
+      },
+      "equipment": "pickaxe",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "female",
+      "faction": "mossbound",
+      "classId": "knight",
+      "name": "Hilda Stonebriar",
+      "palette": "moss",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "armor",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "ponytail",
+          "hair": "#5b3c2f",
+          "width": 5,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "helmet",
+          "height": 9,
+          "feather": true
+        }
+      },
+      "equipment": "sword",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "nonbinary",
+      "faction": "mossbound",
+      "classId": "townsfolk",
+      "name": "Ash Stonebriar",
+      "palette": "moss",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "tunic",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "ponytail",
+          "hair": "#5b3c2f",
+          "width": 5,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "none",
+          "height": 9,
+          "feather": true
+        }
+      },
+      "equipment": "none",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "female",
+      "faction": "emberguard",
+      "classId": "witch",
+      "name": "Hilda Stonebriar",
+      "palette": "ember",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "coat",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "ponytail",
+          "hair": "#5b3c2f",
+          "width": 5,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "wizard",
+          "height": 10,
+          "feather": true
+        }
+      },
+      "equipment": "none",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "male",
+      "faction": "emberguard",
+      "classId": "gnome",
+      "name": "Orrin Stonebriar",
+      "palette": "ember",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "tunic",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "full",
+          "hair": "#5b3c2f",
+          "width": 6,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "cap",
+          "height": 10,
+          "feather": true
+        }
+      },
+      "equipment": "pickaxe",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "female",
+      "faction": "emberguard",
+      "classId": "knight",
+      "name": "Hilda Stonebriar",
+      "palette": "ember",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "armor",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "ponytail",
+          "hair": "#5b3c2f",
+          "width": 5,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "helmet",
+          "height": 9,
+          "feather": true
+        }
+      },
+      "equipment": "sword",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "nonbinary",
+      "faction": "emberguard",
+      "classId": "townsfolk",
+      "name": "Ash Stonebriar",
+      "palette": "ember",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "tunic",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "ponytail",
+          "hair": "#5b3c2f",
+          "width": 5,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "none",
+          "height": 9,
+          "feather": true
+        }
+      },
+      "equipment": "none",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "female",
+      "faction": "tidewatch",
+      "classId": "witch",
+      "name": "Hilda Stonebriar",
+      "palette": "tide",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "coat",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "ponytail",
+          "hair": "#5b3c2f",
+          "width": 5,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "wizard",
+          "height": 10,
+          "feather": true
+        }
+      },
+      "equipment": "none",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "male",
+      "faction": "tidewatch",
+      "classId": "gnome",
+      "name": "Orrin Stonebriar",
+      "palette": "tide",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "tunic",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "full",
+          "hair": "#5b3c2f",
+          "width": 6,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "cap",
+          "height": 10,
+          "feather": true
+        }
+      },
+      "equipment": "pickaxe",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "female",
+      "faction": "tidewatch",
+      "classId": "knight",
+      "name": "Hilda Stonebriar",
+      "palette": "tide",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "armor",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "ponytail",
+          "hair": "#5b3c2f",
+          "width": 5,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "helmet",
+          "height": 9,
+          "feather": true
+        }
+      },
+      "equipment": "sword",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "nonbinary",
+      "faction": "tidewatch",
+      "classId": "townsfolk",
+      "name": "Ash Stonebriar",
+      "palette": "tide",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "tunic",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "ponytail",
+          "hair": "#5b3c2f",
+          "width": 5,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "none",
+          "height": 9,
+          "feather": true
+        }
+      },
+      "equipment": "none",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "female",
+      "faction": "violet_coven",
+      "classId": "witch",
+      "name": "Hilda Stonebriar",
+      "palette": "plum",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "coat",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "ponytail",
+          "hair": "#5b3c2f",
+          "width": 5,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "wizard",
+          "height": 10,
+          "feather": true
+        }
+      },
+      "equipment": "none",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "male",
+      "faction": "violet_coven",
+      "classId": "gnome",
+      "name": "Orrin Stonebriar",
+      "palette": "plum",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "tunic",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "full",
+          "hair": "#5b3c2f",
+          "width": 6,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "cap",
+          "height": 10,
+          "feather": true
+        }
+      },
+      "equipment": "pickaxe",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "female",
+      "faction": "violet_coven",
+      "classId": "knight",
+      "name": "Hilda Stonebriar",
+      "palette": "plum",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "armor",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "ponytail",
+          "hair": "#5b3c2f",
+          "width": 5,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "helmet",
+          "height": 9,
+          "feather": true
+        }
+      },
+      "equipment": "sword",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "nonbinary",
+      "faction": "violet_coven",
+      "classId": "townsfolk",
+      "name": "Ash Stonebriar",
+      "palette": "plum",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "tunic",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "ponytail",
+          "hair": "#5b3c2f",
+          "width": 5,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "none",
+          "height": 9,
+          "feather": true
+        }
+      },
+      "equipment": "none",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "female",
+      "faction": "golden_hearth",
+      "classId": "witch",
+      "name": "Hilda Stonebriar",
+      "palette": "ochre",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "coat",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "ponytail",
+          "hair": "#5b3c2f",
+          "width": 5,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "wizard",
+          "height": 10,
+          "feather": true
+        }
+      },
+      "equipment": "none",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "male",
+      "faction": "golden_hearth",
+      "classId": "gnome",
+      "name": "Orrin Stonebriar",
+      "palette": "ochre",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "tunic",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "full",
+          "hair": "#5b3c2f",
+          "width": 6,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "cap",
+          "height": 10,
+          "feather": true
+        }
+      },
+      "equipment": "pickaxe",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "female",
+      "faction": "golden_hearth",
+      "classId": "knight",
+      "name": "Hilda Stonebriar",
+      "palette": "ochre",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "armor",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "ponytail",
+          "hair": "#5b3c2f",
+          "width": 5,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "helmet",
+          "height": 9,
+          "feather": true
+        }
+      },
+      "equipment": "sword",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    },
+    {
+      "schemaVersion": 3,
+      "type": "player",
+      "seed": "BANNER-17",
+      "gender": "nonbinary",
+      "faction": "golden_hearth",
+      "classId": "townsfolk",
+      "name": "Ash Stonebriar",
+      "palette": "ochre",
+      "skin": "#e4b38b",
+      "parts": {
+        "body": {
+          "seed": "BANNER-17",
+          "style": "tunic",
+          "width": 7,
+          "buttons": true
+        },
+        "head": {
+          "seed": "BANNER-17",
+          "style": "ponytail",
+          "hair": "#5b3c2f",
+          "width": 5,
+          "brow": 1
+        },
+        "hat": {
+          "seed": "BANNER-17",
+          "style": "none",
+          "height": 9,
+          "feather": true
+        }
+      },
+      "equipment": "none",
+      "tools": {
+        "sword": {
+          "type": "sword",
+          "seed": "BANNER-17",
+          "style": "longsword",
+          "material": "obsidian",
+          "length": 17,
+          "guard": 3,
+          "grip": "#473c4c",
+          "gem": "#b75c47"
+        },
+        "pickaxe": {
+          "type": "pickaxe",
+          "seed": "BANNER-17",
+          "style": "crescent",
+          "material": "bronze",
+          "length": 10,
+          "guard": 4,
+          "grip": "#684431",
+          "gem": "#6ba4a5"
+        }
+      }
+    }
+  ]
+}

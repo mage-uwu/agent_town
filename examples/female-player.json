@@ -1,12 +1,14 @@
 {
   "generator": "agent-town/player",
-  "generatorVersion": 2,
+  "generatorVersion": 3,
   "player": {
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "type": "player",
     "seed": "COPPER-005",
     "gender": "female",
-    "equipment": "pickaxe",
+    "faction": "violet_coven",
+    "classId": "witch",
+    "equipment": "none",
     "tools": {
       "sword": {
         "type": "sword",
@@ -30,7 +32,7 @@
       }
     },
     "name": "Hilda Stonebriar",
-    "palette": "tide",
+    "palette": "plum",
     "skin": "#f0ceb0",
     "parts": {
       "head": {
@@ -42,17 +44,33 @@
       },
       "hat": {
         "seed": "COPPER-005",
-        "style": "ranger",
+        "style": "wizard",
         "height": 10,
         "feather": true
       },
       "body": {
         "seed": "COPPER-005",
-        "style": "tunic",
+        "style": "coat",
         "width": 7,
         "buttons": true
       }
     }
+  },
+  "faction": {
+    "id": "violet_coven",
+    "name": "The Violet Coven",
+    "palette": {
+      "name": "Plum & gold",
+      "cloth": "#805576",
+      "hat": "#694367",
+      "trim": "#d7ad5c",
+      "leather": "#544044",
+      "metal": "#9696a8"
+    }
+  },
+  "class": {
+    "id": "witch",
+    "name": "Witch"
   },
   "image": "player.png",
   "size": {

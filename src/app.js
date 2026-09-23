@@ -1,13 +1,14 @@
+import { FACTIONS, CLASSES } from './identities.js';
 import { ACTION_FRAMES, PHASES } from './rig.js';
-import { SIZE, PARTS, DIRECTIONS, STYLES, PALETTES, TOOL_STYLES, TOOL_MATERIALS, createPlayer, generatePart, generateTool, buildModel, buildToolModel, renderModel, generateSheet, animationFrames, validatePlayer, manifest } from './generator.js';
+import { SIZE, PARTS, DIRECTIONS, STYLES, PALETTES, TOOL_STYLES, TOOL_MATERIALS, createPlayer, applyClass, setFaction, generatePart, generateTool, buildModel, buildToolModel, renderModel, generateSheet, animationFrames, validatePlayer, manifest } from './generator.js';
 import { encodePNG, exportBundle } from './export.js';
 
 const $ = id => document.getElementById(id);
 const title = s => s[0].toUpperCase()+s.slice(1);
-const labels = { bob:'Bob cut',ponytail:'Tied ponytail',braided:'Braided beard',full:'Full beard',trimmed:'Short beard',clean:'Clean shaven',ranger:'Ranger’s felt hat',wizard:'Wayfarer’s point',helmet:'Iron & brass helm',hood:'Traveler’s hood',none:'No hat',tunic:'Belted tunic',coat:'Long field coat',armor:'Forged plate',apron:'Artisan’s apron' };
+const labels = { cap:'Pointed gnome cap',bob:'Bob cut',ponytail:'Tied ponytail',braided:'Braided beard',full:'Full beard',trimmed:'Short beard',clean:'Clean shaven',ranger:'Ranger’s felt hat',wizard:'Wayfarer’s point',helmet:'Iron & brass helm',hood:'Traveler’s hood',none:'No hat',tunic:'Belted tunic',coat:'Long field coat',armor:'Forged plate',apron:'Artisan’s apron' };
 const lockIcon = locked => `<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="9" width="12" height="9" rx="1"/><path d="${locked?'M6 9V6a4 4 0 0 1 8 0v3':'M6 9V6a4 4 0 0 1 8 0'}"/><path d="M10 12v3"/></svg>`;
 const locks = new Set();
-let player = createPlayer('COPPER-005'), direction='front', frames={}, model, rotation=null, toastTimer, action='idle', frameIndex=0, animationCache=null, playback=null;
+let player = createPlayer('COPPER-005','male',{faction:'mossbound',classId:'townsfolk'}), direction='front', frames={}, model, rotation=null, toastTimer, action='idle', frameIndex=0, animationCache=null, playback=null;
 function canvas(frame, target) { target.width=frame.width;target.height=frame.height;target.getContext('2d').putImageData(new ImageData(frame.pixels,frame.width,frame.height),0,0); }
 function toast(message) { $('toast').textContent=message;$('toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('visible'),2800); }
 function freshSeed() { const value=new Uint32Array(1);crypto.getRandomValues(value);return `TOWN-${value[0].toString(36).toUpperCase()}`; }
@@ -38,6 +39,14 @@ function refresh() {
     $(`tool-name-${type}`).textContent=`${TOOL_MATERIALS[tool.material].name} ${title(tool.style)} · ${tool.length}px`;
   }
   $('palette-name').textContent=PALETTES[player.palette].name;
+  $('faction').value=player.faction;$('class-select').value=player.classId;
+  $('class-description').textContent=CLASSES[player.classId].description;
+  $('affiliation').textContent=`${FACTIONS[player.faction].name} · ${CLASSES[player.classId].name}`;
+  $('palette-rule').textContent=player.faction==='unaffiliated'?'Personal colors. Join a faction to share its palette.':'Faction colors are shared. Choose Unaffiliated for personal colors.';
+  $('cohort-label').textContent=player.faction==='unaffiliated'?'Your palette, four callings':`${FACTIONS[player.faction].name} · shared colors`;
+  document.querySelectorAll('.palette-button').forEach(b=>{b.disabled=player.faction!=='unaffiliated';});
+  for(const id of ['witch','gnome','knight','townsfolk']) {const member=applyClass(player,id);canvas(renderModel(buildModel(member),'front'),$(`class-preview-${id}`));$(`class-card-${id}`).setAttribute('aria-pressed',String(player.classId===id));}
+
   document.querySelectorAll('.palette-button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.palette===player.palette)));
   document.querySelector('.viewer').classList.toggle('animating',action!=='idle');
   document.querySelector('.stage-coordinates').innerHTML=action==='idle'?'48 × 48 PX<br>STANDING SPRITE':'64 × 64 PX<br>ACTION SPRITE';
@@ -62,7 +71,7 @@ for(const dir of DIRECTIONS) {
   row.innerHTML=`<div class="part-icon"><canvas id="part-${part}" width="48" height="48" aria-label="Isolated ${part}"></canvas></div><div class="part-edit"><label for="style-${part}" class="part-title"><span>0${i+1}</span> ${part.toUpperCase()}</label><select id="style-${part}" aria-label="${title(part)} style">${STYLES[part].map(s=>`<option value="${s}">${labels[s]}</option>`).join('')}</select></div><div class="part-tools"><button class="small-button" id="reroll-${part}" aria-label="Regenerate ${part}" title="Regenerate ${part}">↻</button><button class="small-button" id="lock-${part}" aria-label="Lock ${part}" aria-pressed="false" title="Keep ${part} when generating" >${lockIcon(false)}</button></div>`;
   $('part-controls').append(row);
   $(`style-${part}`).addEventListener('change',e=>{player.parts[part].style=e.target.value;refresh();});
-  $(`reroll-${part}`).addEventListener('click',()=>{player.parts[part]=generatePart(part,freshSeed(),player.gender);refresh();toast(`A new ${part}, in every direction.`);});
+  $(`reroll-${part}`).addEventListener('click',()=>{player.parts[part]=generatePart(part,freshSeed(),player.gender,player.classId);refresh();toast(`A new ${part}, in every direction.`);});
   $(`lock-${part}`).addEventListener('click',()=>{locks.has(part)?locks.delete(part):locks.add(part);const locked=locks.has(part);$(`lock-${part}`).setAttribute('aria-pressed',String(locked));$(`lock-${part}`).innerHTML=lockIcon(locked);$(`reroll-${part}`).disabled=locked;toast(`${title(part)} ${locked?'locked for generation':'unlocked'}.`);});
 });
 for(const [key,palette] of Object.entries(PALETTES)) {
@@ -72,7 +81,7 @@ for(const [key,palette] of Object.entries(PALETTES)) {
 }
 $('gender').addEventListener('change',e=>{
   player.gender=e.target.value;player.name=createPlayer(player.seed,player.gender).name;
-  if(!locks.has('head'))player.parts.head=generatePart('head',player.parts.head.seed,player.gender);
+  if(!locks.has('head'))player.parts.head=generatePart('head',player.parts.head.seed,player.gender,player.classId);
   refresh();toast('Gender updated. Styles and tools remain yours to choose.');
 });
 $('equipment').addEventListener('change',e=>{player.equipment=e.target.value;setAction('idle');});
@@ -89,9 +98,9 @@ for(const button of document.querySelectorAll('[data-action]'))button.addEventLi
 $('play-pause').addEventListener('click',()=>playback?pauseAnimation():playAnimation());
 $('frame').addEventListener('input',e=>{pauseAnimation();frameIndex=Number(e.target.value);drawFrame();});
 $('speed').addEventListener('change',()=>{if(playback)playAnimation();});
-$('generate').addEventListener('click',()=>{const seed=$('seed').value.trim();if(!seed){toast('Give your character a seed first.');$('seed').focus();return;}replacePlayer(createPlayer(seed,player.gender));toast('Character generated. All four views are ready.');});
+$('generate').addEventListener('click',()=>{const seed=$('seed').value.trim();if(!seed){toast('Give your character a seed first.');$('seed').focus();return;}replacePlayer(createPlayer(seed,player.gender,{classId:player.classId,faction:player.faction}));toast('Character generated. All four views are ready.');});
 $('seed').addEventListener('keydown',e=>{if(e.key==='Enter')$('generate').click();});
-$('randomize').addEventListener('click',()=>{replacePlayer(createPlayer(freshSeed(),player.gender));toast('Someone new has arrived.');});
+$('randomize').addEventListener('click',()=>{replacePlayer(createPlayer(freshSeed(),player.gender,{classId:player.classId,faction:player.faction}));toast('Someone new has arrived.');});
 $('grid-toggle').addEventListener('click',()=>{const off=$('stage').classList.toggle('no-grid');$('grid-toggle').setAttribute('aria-pressed',String(!off));});
 $('rotate-toggle').addEventListener('click',()=>{if(rotation){stopRotation();return;}$('rotate-toggle').setAttribute('aria-pressed','true');const order=['front','left','back','right'];rotation=setInterval(()=>selectDirection(order[(order.indexOf(direction)+1)%4]),900);});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopRotation();pauseAnimation();}});
@@ -103,12 +112,14 @@ $('save-recipe').addEventListener('click',()=>{download(JSON.stringify(manifest(
 $('export').addEventListener('click',()=>{try{download(exportBundle(player),'agent-town-player.zip','application/zip');toast('Exported · player, tools, both swing animations, and recipe');}catch(error){toast(`Could not export: ${error.message}`);}});
 $('import').addEventListener('click',()=>$('recipe-file').click());
 $('recipe-file').addEventListener('change',async e=>{try{const file=e.target.files[0];if(!file)return;if(file.size>100000)throw new Error('Please choose a player recipe smaller than 100 KB.');const parsed=JSON.parse(await file.text()),next=validatePlayer(parsed.player??parsed);replacePlayer(next,false);toast('Welcome back. Your player recipe is restored.');}catch(error){toast(error.message);}finally{e.target.value='';}});
-const starterSeeds=['COPPER-005','TOWN-MICA','TOWN-MOON','TOWN-FERN','TOWN-ASH','TOWN-EMBER'];
-for(const [i,seed] of starterSeeds.entries()) {
-  const gender=['male','female','nonbinary'][i%3],p=createPlayer(seed,gender),button=document.createElement('button');button.className='lineup-card';button.setAttribute('aria-label',`Load ${p.name}`);
-  const preview=document.createElement('canvas');canvas(renderModel(buildModel(p),'front'),preview);button.append(preview);
-  const name=document.createElement('span');name.textContent=p.name.split(' ')[0].toUpperCase();button.append(name);
-  const hat=document.createElement('small');hat.textContent=title(p.parts.body.style);button.append(hat);
-  button.addEventListener('click',()=>{replacePlayer(createPlayer(seed,gender));toast(`${p.name.split(' ')[0]} is at the looking glass.`);});$('lineup').append(button);
+for(const [id,faction] of Object.entries(FACTIONS)) {const option=document.createElement('option');option.value=id;option.textContent=faction.name;$('faction').append(option);}
+for(const [id,klass] of Object.entries(CLASSES)) {const option=document.createElement('option');option.value=id;option.textContent=klass.name;$('class-select').append(option);}
+$('faction').addEventListener('change',e=>{player=setFaction(player,e.target.value);refresh();toast(`${FACTIONS[player.faction].name}: ${FACTIONS[player.faction].description}`);});
+function chooseClass(id) {player=applyClass(player,id);setAction('idle');toast(`${CLASSES[id].name} outfit applied. Your faction colors stay with you.`);}
+$('class-select').addEventListener('change',e=>chooseClass(e.target.value));
+for(const id of ['witch','gnome','knight','townsfolk']) {
+  const button=document.createElement('button');button.className='lineup-card';button.id=`class-card-${id}`;button.setAttribute('aria-label',`Choose ${CLASSES[id].name} class`);
+  button.innerHTML=`<canvas id="class-preview-${id}" width="48" height="48"></canvas><span>${CLASSES[id].name.toUpperCase()}</span><small>${CLASSES[id].equipment==='none'?'Empty hands':title(CLASSES[id].equipment)}</small>`;
+  button.addEventListener('click',()=>chooseClass(id));$('lineup').append(button);
 }
 refresh();
